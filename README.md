@@ -1,6 +1,6 @@
 # Jewel.jl
 
-Jewel.jl is a collection of IDE related code. It also handles communication with Light Table, although this is entirely seperate (in the `LightTable` folder) and may be removed eventually.
+CodeTools.jl is a collection of tools for handling Julia code – evaluation, autocompletion etc. – designed to be used as a backend library for IDE support.
 
 It handles things such as:
 
