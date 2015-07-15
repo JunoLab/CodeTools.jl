@@ -50,5 +50,3 @@ function isdefinition(code::String)
     return false
   end
 end
-
-:(a() = b).args[1].head
