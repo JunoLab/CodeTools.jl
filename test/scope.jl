@@ -54,7 +54,7 @@
   end
   """) == "else"
 
-@test Jewel.codemodule(to_cursor("""
+@test CodeTools.codemodule(to_cursor("""
   module Foo
   module Bar|
   end
@@ -64,7 +64,7 @@
 # Treating end correctly in arrays
 @test get_scope("""
   [end|]
-  """) == Jewel.Scope(:array, "[")
+  """) == CodeTools.Scope(:array, "[")
 
 # Failing gracefully with too many ends
 @test get_scope("""

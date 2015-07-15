@@ -51,6 +51,6 @@ end
   # Profiler
 
   export profile
-  profile() = Main.Jewel.profileview().fetch()
+  profile() = Main.CodeTools.profileview().fetch()
 
 end

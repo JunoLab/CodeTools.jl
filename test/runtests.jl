@@ -1,9 +1,9 @@
-using Base.Test, Jewel
+using Base.Test, CodeTools
 
-@test Jewel.getthing("Base.fft") == fft
-@test Jewel.getthing(Base, [:fft]) == fft
+@test CodeTools.getthing("Base.fft") == fft
+@test CodeTools.getthing(Base, [:fft]) == fft
 
-@test Jewel.filemodule(Pkg.dir("Jewel", "src", "module.jl")) == "Jewel"
+@test CodeTools.filemodule(Pkg.dir("CodeTools", "src", "module.jl")) == "CodeTools"
 
 include("utils.jl")
 include("scope.jl")

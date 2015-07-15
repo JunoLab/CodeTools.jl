@@ -13,5 +13,5 @@ before_install:
   - sudo apt-get update -qq -y
   - sudo apt-get install libpcre3-dev julia -y
 script:
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("Jewel"))`); Pkg.pin("Jewel"); Pkg.resolve()'
-  - julia -e 'using Jewel; @assert isdefined(:Jewel); @assert typeof(Jewel) === Module'
+  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("CodeTools"))`); Pkg.pin("CodeTools"); Pkg.resolve()'
+  - julia -e 'using CodeTools; @assert isdefined(:CodeTools); @assert typeof(CodeTools) === Module'

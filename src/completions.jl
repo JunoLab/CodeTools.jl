@@ -127,7 +127,7 @@ const pathpattern = r"[a-zA-Z0-9_\.\\/]*"
 includepaths(path) =
   @>> dirsnearby(path, ascend = 0) jl_files map(p->p[length(path)+2:end])
 
-includepaths(Pkg.dir("Jewel", "src"))
+includepaths(Pkg.dir("CodeTools", "src"))
 
 complete(include) do info
   file = info[:file]

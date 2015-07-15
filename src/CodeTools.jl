@@ -1,4 +1,4 @@
-module Jewel
+module CodeTools
 
 using LNR, Lazy, Requires
 
@@ -11,9 +11,4 @@ include("doc.jl")
 
 @lazymod ProfileView "profile/profile.jl"
 
-# Shim for now
-server(args...) = Main.LightTable.server(args...)
-
 end # module
-
-include("LightTable/LightTable.jl")

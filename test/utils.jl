@@ -1,7 +1,7 @@
 using LNR
 
 function get_cursor(s)
-  ls = Jewel.lines(s)
+  ls = CodeTools.lines(s)
   for (i, l) in enumerate(ls)
     m = match(r".*?\|", l)
     m == nothing || return LNR.cursor(i, length(m.match))
@@ -15,12 +15,12 @@ to_cursor(s) = (rem_cursor(s), get_cursor(s))
 
 function get_tokens(s)
   s, c = to_cursor(s)
-  Jewel.tokens(s, c)
+  CodeTools.tokens(s, c)
 end
 
 function get_scopes(s)
   s, c = to_cursor(s)
-  Jewel.scopes(s, c)
+  CodeTools.scopes(s, c)
 end
 
 function get_scope(s)
