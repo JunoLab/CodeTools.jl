@@ -42,8 +42,7 @@ function completions(code, cursor; mod = Main, file = nothing)
     nothing
   elseif ident != ""
     name = split(ident, ".")[end]
-    completions = accessible(mod)
-    completions = filter(c -> isempty(setdiff(name, c)), completions)
+    @>> accessible(mod) filter(c -> isempty(setdiff(name, c)))
   end
 end
 
@@ -102,6 +101,8 @@ includepaths(Pkg.dir("CodeTools", "src"))
 # end
 
 # Package manager completions
+
+# TODO: stringify properly
 
 packages(dir = Pkg.dir()) =
   @>> dir readdir filter(x->!ismatch(r"^\.|^METADATA$|^REQUIRE$", x))
