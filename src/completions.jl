@@ -24,7 +24,7 @@ function completions(code, cursor; mod = Main, file = nothing)
   call = lastcall(scs)
 
   if sc.kind == :using
-    pkg_completions(packages())
+    packages()
   elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
     fncompletions[f](@d(:mod => mod,
                         :file => file,
