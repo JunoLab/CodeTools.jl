@@ -13,6 +13,9 @@ function lastcall(scopes)
   end
 end
 
+text(s::AbstractString) = s
+text(s) = s[:text]
+
 """
 Takes a block of code and a cursor and returns autocomplete data.
 """
@@ -42,7 +45,10 @@ function completions(code, cursor; mod = Main, file = nothing)
     nothing
   elseif ident != ""
     name = split(ident, ".")[end]
-    @>> accessible(mod) filter(c -> isempty(setdiff(name, c)))
+    @>> accessible(mod) begin
+      filter(c -> isempty(setdiff(name, text(c))))
+      vcat(builtins)
+    end
   end
 end
 
@@ -63,8 +69,7 @@ filtervalid(names) = @>> names map(string) filter(x->!ismatch(r"#", x))
 
 accessible(mod::Module) =
   [names(mod, true, true);
-   map(names, moduleusings(mod))...;
-   builtins] |> unique |> filtervalid
+   map(names, moduleusings(mod))...] |> unique |> filtervalid
 
 function qualifier(s)
   m = match(Regex("((?:$(identifier.pattern)\\.)+)(?:$(identifier.pattern))?\$"), s)
