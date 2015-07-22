@@ -16,6 +16,28 @@ end
 text(s::AbstractString) = s
 text(s) = s[:text]
 
+todict(s::AbstractString) = @d(:text=>s)
+todict(s) = s
+
+function withmeta(mod, s)
+  try
+    if Base.isidentifier(text(s))
+      s = todict(s)
+      x = mod.(symbol(text(s)))
+      if isa(x, Function)
+        s[:type] = :function
+      elseif isa(x, Module)
+        s[:type] = :module
+      elseif isa(x, Type)
+        s[:type] = :type
+      else
+        s[:type] = :constant
+      end
+    end
+  end
+  return s
+end
+
 """
 Takes a block of code and a cursor and returns autocomplete data.
 """
@@ -27,7 +49,7 @@ function completions(code, cursor; mod = Main, file = nothing)
   call = lastcall(scs)
 
   if sc.kind == :using
-    packages()
+    packages() |> pkgcompletions
   elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
     fncompletions[f](@d(:mod => mod,
                         :file => file,
@@ -47,7 +69,8 @@ function completions(code, cursor; mod = Main, file = nothing)
     name = split(ident, ".")[end]
     @>> accessible(mod) begin
       filter(c -> isempty(setdiff(name, text(c))))
-      vcat(builtins)
+      map(c -> withmeta(mod, c))
+      vcat(map(c -> @d(:text=>c, :type=>:keyword), builtins))
     end
   end
 end
@@ -117,14 +140,16 @@ required_packages() =
 
 unused_packages() = setdiff(all_packages(), required_packages())
 
+pkgcompletions(xs) = map(x -> @d(:text=>x, :type=>"package"), xs)
+
 for f in (Pkg.add, Pkg.clone)
   complete(f) do _
-    unused_packages()
+    unused_packages() |> pkgcompletions
   end
 end
 
 for f in (Pkg.checkout, Pkg.free, Pkg.rm, Pkg.publish, Pkg.build, Pkg.test)
   complete(f) do _
-    packages()
+    packages() |> pkgcompletions
   end
 end
