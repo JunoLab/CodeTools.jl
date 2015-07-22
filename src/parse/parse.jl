@@ -9,6 +9,10 @@ codemodule(code, pos) =
 precursor(s::String, i) = join(collect(s)[1:min(i-1, end)])
 postcursor(s::String, i) = join(collect(s)[i:end])
 
+"""
+Retreive the appropriate block of code as well as well
+as the position of the cursor relative to the block.
+"""
 function getblockcursor(code, line, c)
   code, bounds = getblock(code, line)
   code, bounds, cursor(c.line-bounds[1]+1, c.column)

@@ -7,14 +7,6 @@ const builtins = ["abstract", "baremodule", "begin", "bitstype", "break",
                   "local", "macro", "module", "quote", "return", "try", "type",
                   "typealias", "using", "while"]
 
-identifier_completions(hints; textual = true) =
-  @d(:hints => hints,
-     :pattern => identifier,
-     :textual => textual)
-
-identifier_completions(; textual = true) =
-  identifier_completions(UTF8String[], textual)
-
 function lastcall(scopes)
   for i = length(scopes):-1:1
     scopes[i].kind == :call && return scopes[i].name
@@ -25,36 +17,35 @@ end
 Takes a block of code and a cursor and returns autocomplete data.
 """
 function completions(code, cursor; mod = Main, file = nothing)
+  ident = getqualifiedname(code, cursor)
   line = precursor(lines(code)[cursor.line], cursor.column)
   scs = scopes(code, cursor)
   sc = scs[end]
   call = lastcall(scs)
 
-  if islatexinput(line)
-    @d(:hints => latex_completions,
-       :pattern => r"\\[a-zA-Z0-9^_]*",
-       :textual => false)
-  elseif sc.kind == :using
+  if sc.kind == :using
     pkg_completions(packages())
-  elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
-    fncompletions[f](@d(:mod => mod,
-                        :file => file,
-                        :input => precursor(line, cursor.column)))
+  # elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
+  #   fncompletions[f](@d(:mod => mod,
+  #                       :file => file,
+  #                       :input => precursor(line, cursor.column)))
   elseif sc.kind in (:string, :multiline_string, :comment, :multiline_comment)
     nothing
-  elseif (q = qualifier(line)) != nothing
-    thing = getthing(mod, q, nothing)
-    if isa(thing, Module)
-      identifier_completions((@> thing names(true) filtervalid),
-                             textual = false)
-    elseif thing != nothing && sc.kind == :toplevel
-      identifier_completions((@> thing names filtervalid),
-                             textual = false)
-    end
+  # elseif (q = qualifier(line)) != nothing
+  #   thing = getthing(mod, q, nothing)
+  #   if isa(thing, Module)
+  #     identifier_completions((@> thing names(true) filtervalid),
+  #                            textual = false)
+  #   elseif thing != nothing && sc.kind == :toplevel
+  #     identifier_completions((@> thing names filtervalid),
+  #                            textual = false)
+  #   end
   elseif isnum(line)
     nothing
-  else
-    identifier_completions(accessible(mod))
+  elseif ident != ""
+    name = split(ident, ".")[end]
+    completions = accessible(mod)
+    completions = filter(c -> isempty(setdiff(name, c)), completions)
   end
 end
 
@@ -65,13 +56,6 @@ function allcompletions(code, cursor; mod = Main, file = nothing)
   block, _, cursor′ = getblockcursor(code, cursor)
   cs = completions(block, cursor′, mod = mod, file = file)
   cs == nothing && return nothing
-  if !haskey(cs, :textual) || cs[:textual]
-    ts = tokens(code, cursor)
-    hints = cs[:hints]
-    for t in ts
-      push!(hints, t)
-    end
-  end
   return cs
 end
 
@@ -94,23 +78,6 @@ end
 
 isnum(s) = ismatch(r"(0x[0-9a-zA-Z]*|[0-9]+)$", s)
 
-# Latex completions
-# –––––––––––––––––
-
-const tab_length = 8
-
-tabpad(s, ts) = s * "\t"^max((ts - length(s)÷tab_length), 1)
-
-const latex_completions =
-  [@d(:completion => completion, :text => tabpad(text, 2) * completion)
-   for (text, completion) in Base.REPLCompletions.latex_symbols]
-
-const reverse_latex_commands =
-  [first(v) => k for (k, v) in Base.REPLCompletions.latex_symbols]
-
-islatexinput(str::String) =
-  ismatch(r"\\[a-zA-Z0-9_^]*$", str)
-
 # Custom completions
 # ––––––––––––––––––
 
@@ -129,13 +96,12 @@ includepaths(path) =
 
 includepaths(Pkg.dir("CodeTools", "src"))
 
-complete(include) do info
-  file = info[:file]
-  dir = file == nothing ? pwd() : dirname(file)
-  @d(:hints => includepaths(dir),
-     :pattern => pathpattern,
-     :textual => false)
-end
+# TODO: custom prefixes
+# complete(include) do info
+#   file = info[:file]
+#   dir = file == nothing ? pwd() : dirname(file)
+#   includepaths(dir)
+# end
 
 # Package manager completions
 
@@ -150,9 +116,7 @@ required_packages() =
 unused_packages() = setdiff(all_packages(), required_packages())
 
 pkg_completions(hints) =
-  @d(:hints => hints,
-     :pattern => r"[a-zA-Z0-9]*",
-     :textual => false)
+  hints
 
 for f in (Pkg.add, Pkg.clone)
   complete(f) do _
