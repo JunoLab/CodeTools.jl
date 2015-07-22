@@ -2,7 +2,7 @@
 
 using LNR
 import JuliaParser.Lexer
-include("streams.jl")
+include("../utils/streams.jl")
 
 const identifier_inner = r"[\p{L}\p{N}!]"
 const identifier = Regex("(?![!\\p{N}])$(identifier_inner.pattern)+")
