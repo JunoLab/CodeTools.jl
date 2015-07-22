@@ -31,15 +31,13 @@ function completions(code, cursor; mod = Main, file = nothing)
                         :input => precursor(line, cursor.column)))
   elseif sc.kind in (:string, :multiline_string, :comment, :multiline_comment)
     nothing
-  # elseif (q = qualifier(line)) != nothing
-  #   thing = getthing(mod, q, nothing)
-  #   if isa(thing, Module)
-  #     identifier_completions((@> thing names(true) filtervalid),
-  #                            textual = false)
-  #   elseif thing != nothing && sc.kind == :toplevel
-  #     identifier_completions((@> thing names filtervalid),
-  #                            textual = false)
-  #   end
+  elseif (q = qualifier(line)) != nothing
+    thing = getthing(mod, q, nothing)
+    if isa(thing, Module)
+      @> thing names(true) filtervalid
+    elseif thing != nothing && sc.kind == :toplevel
+      @> thing names filtervalid
+    end
   elseif isnum(line)
     nothing
   elseif ident != ""
