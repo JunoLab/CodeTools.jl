@@ -25,10 +25,10 @@ function completions(code, cursor; mod = Main, file = nothing)
 
   if sc.kind == :using
     pkg_completions(packages())
-  # elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
-  #   fncompletions[f](@d(:mod => mod,
-  #                       :file => file,
-  #                       :input => precursor(line, cursor.column)))
+  elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
+    fncompletions[f](@d(:mod => mod,
+                        :file => file,
+                        :input => precursor(line, cursor.column)))
   elseif sc.kind in (:string, :multiline_string, :comment, :multiline_comment)
     nothing
   # elseif (q = qualifier(line)) != nothing
@@ -115,17 +115,14 @@ required_packages() =
 
 unused_packages() = setdiff(all_packages(), required_packages())
 
-pkg_completions(hints) =
-  hints
-
 for f in (Pkg.add, Pkg.clone)
   complete(f) do _
-    pkg_completions(unused_packages())
+    unused_packages()
   end
 end
 
 for f in (Pkg.checkout, Pkg.free, Pkg.rm, Pkg.publish, Pkg.build, Pkg.test)
   complete(f) do _
-    pkg_completions(packages())
+    packages()
   end
 end
