@@ -28,8 +28,8 @@ macro var(x)
         (mod_.@x_) => (mod, x)
         (@x_)      => (nothing, x)
         x_""       => (nothing, x)
-        _          => isa(x, Symbol) ? (nothing, x) :
-                        error("Invalid @var syntax `$x`")
+        _          => (isa(x, Symbol) ? (nothing, x) :
+                        error("Invalid @var syntax `$x`"))
     end
     mod == nothing && (mod = module_name(current_module()))
     :(Binding($(esc(mod)), $(Expr(:quote, x))))
