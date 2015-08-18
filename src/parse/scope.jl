@@ -55,6 +55,7 @@ function qualifiedname(ts, name = nexttoken(ts))
   pos = 0
   while true
     pos = position(ts.io)
+    t = nothing
     try
       Lexer.next_token(ts) == :(.) || break
       t = Lexer.next_token(ts)
