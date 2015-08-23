@@ -1,5 +1,7 @@
 # A pseudo-parser which extracts information from Julia code
 
+import Base: ==
+
 using LNR
 import JuliaParser.Lexer
 include("../utils/streams.jl")
