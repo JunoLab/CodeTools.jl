@@ -1,7 +1,5 @@
-JSON
+julia 0.4-
 Lazy
-Compose
 LNR
 JuliaParser
-Requires
 MacroTools
