@@ -3,6 +3,7 @@ module CodeTools
 using MacroTools
 
 using LNR, Lazy, Requires
+using Compat
 
 include("parse/parse.jl")
 include("eval.jl")
