@@ -148,7 +148,7 @@ for f in (Pkg.add, Pkg.clone)
   end
 end
 
-for f in (Pkg.checkout, Pkg.free, Pkg.rm, Pkg.publish, Pkg.build, Pkg.test)
+for f in (Pkg.checkout, Pkg.free, Pkg.rm, Pkg.build, Pkg.test)
   complete(f) do _
     packages() |> pkgcompletions
   end
