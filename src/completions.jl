@@ -61,7 +61,7 @@ function completions(code, cursor; mod = Main, file = nothing)
     if isa(thing, Module)
       @> thing names(true) filtervalid
     elseif thing != nothing && sc.kind == :toplevel
-      @> thing names filtervalid
+      @> thing fieldnames filtervalid
     end
   elseif isnum(line)
     nothing
