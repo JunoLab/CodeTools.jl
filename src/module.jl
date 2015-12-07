@@ -12,8 +12,8 @@ function readdir′(dir)
   end
 end
 
-isdir′(f) = try isdir(f) end
-isfile′(f) = try isfile(f) end
+isdir′(f) = try isdir(f) catch ; false ; end
+isfile′(f) = try isfile(f) catch ; false ; end
 
 files(dir) =
   @>> dir readdir′ map!(f->joinpath(dir, f)) filter!(isfile′)
