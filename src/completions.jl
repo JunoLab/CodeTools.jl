@@ -1,3 +1,7 @@
+# TOOD: needs a massive cleanup.
+
+import Base.Docs: Binding, @var
+
 export completions, allcompletions, complete
 
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
@@ -25,7 +29,9 @@ function withmeta(mod, s)
   try
     if Base.isidentifier(text(s))
       s = todict(s)
-      x = mod.(symbol(text(s)))
+      b = eval(mod, :(Base.Docs.@var $(symbol(text(s)))))
+      x = b.mod.(b.var)
+      s[:rightLabel] = string(b.mod)
       if isa(x, Function)
         s[:type] = :function
       elseif isa(x, Module)
@@ -34,6 +40,15 @@ function withmeta(mod, s)
         s[:type] = :type
       else
         s[:type] = :constant
+      end
+      if (sig = signature(b)) ≠ nothing
+        s[:displayText] = sig
+      end
+      # if (ret = returns(b)) ≠ nothing
+      #   s[:leftLabel] = ret
+      # end
+      if (sum = summary(b)) ≠ nothing
+        s[:description] = sum
       end
     end
   end
