@@ -16,7 +16,7 @@ end
 text(s::AbstractString) = s
 text(s) = s[:text]
 
-todict(s::AbstractString) = @d(:text=>s)
+todict(s::AbstractString) = d(:text=>s)
 todict(s) = s
 
 function withmeta(mod, s)
@@ -51,7 +51,7 @@ function completions(code, cursor; mod = Main, file = nothing)
   if sc.kind == :using
     packages() |> pkgcompletions
   elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
-    fncompletions[f](@d(:mod => mod,
+    fncompletions[f](d(:mod => mod,
                         :file => file,
                         :input => precursor(line, cursor.column)))
   elseif sc.kind in (:string, :multiline_string, :comment, :multiline_comment)
@@ -70,7 +70,7 @@ function completions(code, cursor; mod = Main, file = nothing)
     @>> accessible(mod) begin
       filter(c -> isempty(setdiff(name, text(c))))
       map(c -> withmeta(mod, c))
-      vcat(map(c -> @d(:text=>c, :type=>:keyword), builtins))
+      vcat(map(c -> d(:text=>c, :type=>:keyword), builtins))
     end
   end
 end
@@ -140,7 +140,7 @@ required_packages() =
 
 unused_packages() = setdiff(all_packages(), required_packages())
 
-pkgcompletions(xs) = map(x -> @d(:text=>x, :type=>"package"), xs)
+pkgcompletions(xs) = map(x -> d(:text=>x, :type=>"package"), xs)
 
 for f in (Pkg.add, Pkg.clone)
   complete(f) do _
