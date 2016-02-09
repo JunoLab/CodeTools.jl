@@ -12,19 +12,14 @@ function getthing(mod::Module, name::Vector{Symbol}, default = nothing)
   return thing
 end
 
-getthing(name::Vector{Symbol}, default = nothing) =
-  getthing(Main, name, default)
-
 getthing(mod::Module, name::AbstractString, default = nothing) =
   name == "" ?
     default :
     @as _ name split(_, ".", keep=false) map(symbol, _) getthing(mod, _, default)
 
-getthing(name::AbstractString, default = nothing) =
-  getthing(Main, name, default)
+getthing(mod::Module, ::Void, default) = default
 
-getthing(::Void, default) = default
-getthing(mod, ::Void, default) = default
+getthing(args...) = getthing(Main, args...)
 
 # include_string with line numbers
 
