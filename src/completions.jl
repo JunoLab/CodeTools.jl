@@ -1,5 +1,7 @@
 export completions, allcompletions, complete
 
+moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
+
 const builtins = ["abstract", "baremodule", "begin", "bitstype", "break",
                   "catch", "ccall", "const", "continue", "do", "else",
                   "elseif", "end", "export", "finally", "for", "function",
