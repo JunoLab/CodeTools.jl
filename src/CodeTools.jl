@@ -6,6 +6,7 @@ using LNR, Lazy, Requires, Compat
 
 typealias AString AbstractString
 
+include("utils.jl")
 include("parse/parse.jl")
 include("eval.jl")
 include("module.jl")

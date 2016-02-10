@@ -35,13 +35,17 @@ completiontype(x) =
   isa(x, Function) ? "function" :
   "constant"
 
+const meta_cache = Dict{Tuple{Module,String},Dict{Any,Any}}()
+
 function withmeta(completion::AString, mod::Module)
   isdefined(mod, symbol(completion)) || return completion
   b = Binding(mod, symbol(completion))
+  mod = b.mod
+  haskey(meta_cache, (mod, completion)) && return meta_cache[(mod, completion)]
   x = b[]
   c = d(:text => completion,
         :type => completiontype(x),
-        :rightLabel => string(b.mod))
+        :rightLabel => string(mod))
   if isa(x, Function)
     c[:displayText] = signature(b)
     c[:description] = description(b)
@@ -49,16 +53,22 @@ function withmeta(completion::AString, mod::Module)
   c
 end
 
+for name in map(string, names(Base))
+  meta_cache[(Base, name)] = withmeta(name, Base)
+end
+
 withmeta(completions::Vector, mod::Module) =
   [withmeta(completion, mod) for completion in completions]
 
-function namecompletions(mod::Module, qualified = false)
+function namecompletions_(mod::Module, qualified = false)
   if !qualified
     [withmeta(accessible(mod), mod); builtin_completions]
   else
     withmeta(filtervalid(names(mod, true)), mod)
   end
 end
+
+const namecompletions = memoize_debounce(namecompletions_)
 
 # Completions
 # –––––––––––
