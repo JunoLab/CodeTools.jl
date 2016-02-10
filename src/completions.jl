@@ -35,7 +35,7 @@ completiontype(x) =
   isa(x, Function) ? "function" :
   "constant"
 
-const meta_cache = Dict{Tuple{Module,String},Dict{Any,Any}}()
+const meta_cache = Dict{Any,Any}()
 
 function withmeta(completion::AString, mod::Module)
   isdefined(mod, symbol(completion)) || return completion
