@@ -65,6 +65,9 @@ function description(b::Binding)
     first = md.content[2]
   end
   if isa(first, Paragraph)
-    return Markdown.plain(first)
+    desc = Markdown.plain(first)
+    return length(desc) > 100 ?
+      desc[1:100]*" ..." :
+      desc
   end
 end
