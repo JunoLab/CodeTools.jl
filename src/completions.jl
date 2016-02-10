@@ -73,9 +73,9 @@ const namecompletions = memoize_debounce(namecompletions_)
 # Completions
 # –––––––––––
 
-const prefix_pattern = r"(@?[_\p{L}][_\p{L}\p{N}!]*\.?)+$"
+const prefix_pattern = r"(@?[_\p{L}][_\p{L}\p{N}!]*\.?)+$|@$"
 
-function prefix(line, mod = Main)
+function prefix(line)
   match = Base.match(prefix_pattern, line)
   match == nothing && return UTF8String[]
   split(match.match, ".")
@@ -83,7 +83,8 @@ end
 
 function completions(line, mod = Main)
   pre = prefix(line)
-  if !isempty(pre) && (mod = getthing(mod, pre[1:end-1])) != nothing
+  mod = getthing(mod, pre[1:end-1])
+  if isa(mod, Module)
     return namecompletions(mod, length(pre)>1)
   end
   return []
