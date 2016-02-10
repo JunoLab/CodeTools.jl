@@ -8,6 +8,8 @@ flat_content(md::MD) = flat_content(md.content)
 flatten(md::MD) = MD(flat_content(md))
 
 function fullsignature(b::Binding)
+  doc = Docs.doc(b)
+  isa(doc, MD) || return
   first = flatten(Docs.doc(b)).content[1]
   code =
     isa(first, Code) ? first.code :
@@ -19,11 +21,16 @@ function fullsignature(b::Binding)
   end
 end
 
-signature(b::Binding) = replace(fullsignature(b), r" -> .*$", "")
+function signature(b::Binding)
+  sig = fullsignature(b)
+  sig == nothing && return
+  replace(sig, r" -> .*$", "")
+end
 
 function returns(b::Binding)
   r = r" -> (.*)"
   sig = fullsignature(b)
+  sig == nothing && return
   if ismatch(r, sig)
     ret = match(r, sig).captures[1]
     if length(ret) < 10
@@ -32,10 +39,13 @@ function returns(b::Binding)
   end
 end
 
-function summary(b::Binding)
+function description(b::Binding)
   md = flatten(Docs.doc(b))
   first = md.content[1]
-  isa(first, Code) && (first = md.content[2])
+  if isa(first, Code)
+    length(md.content) < 2 && return
+    first = md.content[2]
+  end
   if isa(first, Paragraph)
     return Markdown.plain(first)
   end

@@ -1,10 +1,7 @@
-# TOOD: needs a massive cleanup.
+import Base.Docs: Binding
 
-import Base.Docs: Binding, @var
-
-export completions, allcompletions, complete
-
-moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
+# Keywords
+# ––––––––
 
 const builtins = ["abstract", "baremodule", "begin", "bitstype", "break",
                   "catch", "ccall", "const", "continue", "do", "else",
@@ -13,160 +10,71 @@ const builtins = ["abstract", "baremodule", "begin", "bitstype", "break",
                   "local", "macro", "module", "quote", "return", "try", "type",
                   "typealias", "using", "while"]
 
-function lastcall(scopes)
-  for i = length(scopes):-1:1
-    scopes[i].kind == :call && return scopes[i].name
-  end
-end
-
-text(s::AbstractString) = s
-text(s) = s[:text]
-
-todict(s::AbstractString) = d(:text=>s)
-todict(s) = s
-
-function withmeta(mod, s)
-  try
-    if Base.isidentifier(text(s))
-      s = todict(s)
-      b = eval(mod, :(Base.Docs.@var $(symbol(text(s)))))
-      x = b.mod.(b.var)
-      s[:rightLabel] = string(b.mod)
-      if isa(x, Function)
-        s[:type] = :function
-      elseif isa(x, Module)
-        s[:type] = :module
-      elseif isa(x, Type)
-        s[:type] = :type
-      else
-        s[:type] = :constant
-      end
-      if (sig = signature(b)) ≠ nothing
-        s[:displayText] = sig
-      end
-      # if (ret = returns(b)) ≠ nothing
-      #   s[:leftLabel] = ret
-      # end
-      if (sum = summary(b)) ≠ nothing
-        s[:description] = sum
-      end
-    end
-  end
-  return s
-end
-
-"""
-Takes a block of code and a cursor and returns autocomplete data.
-"""
-function completions(code, cursor; mod = Main, file = nothing)
-  ident = getqualifiedname(code, cursor)
-  line = precursor(lines(code)[cursor.line], cursor.column)
-  scs = scopes(code, cursor)
-  sc = scs[end]
-  call = lastcall(scs)
-
-  if sc.kind == :using
-    packages() |> pkgcompletions
-  elseif call != nothing && (f = getthing(call, mod); haskey(fncompletions, f))
-    fncompletions[f](d(:mod => mod,
-                        :file => file,
-                        :input => precursor(line, cursor.column)))
-  elseif sc.kind in (:string, :multiline_string, :comment, :multiline_comment)
-    nothing
-  elseif (q = qualifier(line)) != nothing
-    thing = getthing(mod, q, nothing)
-    if isa(thing, Module)
-      @> thing names(true) filtervalid
-    elseif thing != nothing && sc.kind == :toplevel
-      @> thing fieldnames filtervalid
-    end
-  elseif isnum(line)
-    nothing
-  elseif ident != ""
-    name = split(ident, ".")[end]
-    @>> accessible(mod) begin
-      filter(c -> isempty(setdiff(name, text(c))))
-      map(c -> withmeta(mod, c))
-      vcat(map(c -> d(:text=>c, :type=>:keyword), builtins))
-    end
-  end
-end
-
-"""
-Takes a file of code and a cursor and returns autocomplete data.
-"""
-function allcompletions(code, cursor; mod = Main, file = nothing)
-  block, _, cursor′ = getblockcursor(code, cursor)
-  cs = completions(block, cursor′, mod = mod, file = file)
-  cs == nothing && return nothing
-  return cs
-end
+const builtin_completions =
+  [d(:text=>k, :type=>:keyword)
+   for k in builtins]
 
 # Module completions
 # ––––––––––––––––––
 
-filtervalid(names) = @>> names map(string) filter(x->!ismatch(r"#", x))
+const identifier_pattern = r"^@?[_\p{L}][_\p{L}\p{N}!]*$"
+
+moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
+
+filtervalid(names) = @>> names map(string) filter(x->ismatch(identifier_pattern, x))
 
 accessible(mod::Module) =
   [names(mod, true, true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
-function qualifier(s)
-  m = match(Regex("((?:$(identifier.pattern)\\.)+)(?:$(identifier.pattern))?\$"), s)
-  m == nothing ? m : m.captures[1]
+Base.getindex(b::Binding) = b.mod.(b.var)
+
+completiontype(x) =
+  isa(x, Module) ? "module" :
+  isa(x, DataType) ? "type" :
+  isa(x, Function) ? "function" :
+  "constant"
+
+function withmeta(completion::AString, mod::Module)
+  isdefined(mod, symbol(completion)) || return completion
+  b = Binding(mod, symbol(completion))
+  x = b[]
+  c = d(:text => completion,
+        :type => completiontype(x),
+        :rightLabel => string(b.mod))
+  if isa(x, Function)
+    c[:displayText] = signature(b)
+    c[:description] = description(b)
+  end
+  c
 end
 
-isnum(s) = ismatch(r"(0x[0-9a-zA-Z]*|[0-9]+)$", s)
+withmeta(completions::Vector, mod::Module) =
+  [withmeta(completion, mod) for completion in completions]
 
-# Custom completions
-# ––––––––––––––––––
-
-const fncompletions = Dict{Function,Function}()
-
-complete(completions::Function, f::Function) =
-  fncompletions[f] = completions
-
-# Include completions
-# TODO: cd completions
-
-const pathpattern = r"[a-zA-Z0-9_\.\\/]*"
-
-includepaths(path) =
-  @>> dirsnearby(path, ascend = 0) jl_files map(p->p[length(path)+2:end])
-
-includepaths(Pkg.dir("CodeTools", "src"))
-
-# TODO: custom prefixes
-# complete(include) do info
-#   file = info[:file]
-#   dir = file == nothing ? pwd() : dirname(file)
-#   includepaths(dir)
-# end
-
-# Package manager completions
-
-# TODO: stringify properly
-
-packages(dir = Pkg.dir()) =
-  @>> dir readdir filter(x->!ismatch(r"^\.|^METADATA$|^REQUIRE$", x))
-
-all_packages() = packages(Pkg.dir("METADATA"))
-
-required_packages() =
-  @>> Pkg.dir("REQUIRE") readall lines
-
-unused_packages() = setdiff(all_packages(), required_packages())
-
-pkgcompletions(xs) = map(x -> d(:text=>x, :type=>"package"), xs)
-
-for f in (Pkg.add, Pkg.clone)
-  complete(f) do _
-    unused_packages() |> pkgcompletions
+function namecompletions(mod::Module, qualified = false)
+  if !qualified
+    [withmeta(accessible(mod), mod); builtin_completions]
+  else
+    withmeta(filtervalid(names(mod, true)), mod)
   end
 end
 
-for f in (Pkg.checkout, Pkg.free, Pkg.rm, Pkg.build, Pkg.test)
-  complete(f) do _
-    packages() |> pkgcompletions
+# Completions
+# –––––––––––
+
+const prefix_pattern = r"(@?[_\p{L}][_\p{L}\p{N}!]*\.?)+$"
+
+function prefix(line, mod = Main)
+  match = Base.match(prefix_pattern, line)
+  match == nothing && return UTF8String[]
+  split(match.match, ".")
+end
+
+function completions(line, mod = Main)
+  pre = prefix(line)
+  if !isempty(pre) && (mod = getthing(mod, pre[1:end-1])) != nothing
+    return namecompletions(mod, length(pre)>1)
   end
+  return []
 end

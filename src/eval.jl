@@ -1,8 +1,9 @@
 # Qualified names → objects
 
-function getthing(mod::Module, name::Vector{Symbol}, default = nothing)
+function getthing(mod::Module, name::Vector, default = nothing)
   thing = mod
   for sym in name
+    sym = symbol(sym)
     if isdefined(thing, sym)
       thing = thing.(sym)
     else
