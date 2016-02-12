@@ -46,10 +46,8 @@ function withmeta(completion::AString, mod::Module)
   c = d(:text => completion,
         :type => completiontype(x),
         :rightLabel => string(mod))
-  if isa(x, Function)
-    c[:displayText] = signature(b)
-    c[:description] = description(b)
-  end
+  c[:displayText] = signature(b)
+  c[:description] = description(b)
   c
 end
 
