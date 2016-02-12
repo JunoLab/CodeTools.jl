@@ -1,3 +1,8 @@
+function memoize(f)
+  mem = d()
+  (args...) -> Base.@get!(mem, args, f(args...))
+end
+
 function memoize_debounce(f, expiry = 1)
   mem = d()
   function (args...)

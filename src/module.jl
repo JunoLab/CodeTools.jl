@@ -86,7 +86,7 @@ end
 Takes an absolute path to a file and returns a string
 representing the module it belongs to.
 """
-function filemodule(path::AbstractString)
+function filemodule_(path::AbstractString)
   loc = find_include(path)
   if loc != nothing
     file, line = loc
@@ -100,6 +100,8 @@ function filemodule(path::AbstractString)
   end
   return ""
 end
+
+const filemodule = memoize(filemodule_)
 
 # Get all modules
 
