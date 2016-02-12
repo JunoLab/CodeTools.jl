@@ -70,9 +70,6 @@ end
 
 const namecompletions = memoize_debounce(namecompletions_)
 
-# Completions
-# –––––––––––
-
 const prefix_pattern = r"(@?[_\p{L}][_\p{L}\p{N}!]*\.?)+$|@$"
 
 function prefix(line)
@@ -81,7 +78,110 @@ function prefix(line)
   split(match.match, ".")
 end
 
+# Path Completions
+# ––––––––––––––––
+
+function funcprefix(line)
+  m = match(r"\b([^\s]*)\(([^\)]*)$", line) # matches `foo(bar`
+  m == nothing && return
+  return m.captures[1], m.captures[2]
+end
+
+function pathprefix(line)
+  m = match(r"\"?([\w\\/:\-.]*)$", line)
+  m == nothing && return
+  return m.match, m.captures[1]
+end
+
+function stringmeta(cs, prefix)
+  map(c -> d(:text => c, :_prefix => prefix, :type => :file), cs)
+end
+
+function pathmeta(cs, path, prefix)
+  stringmeta(map(c -> replace(joinpath(path, c), r"^\./", ""), cs), prefix)
+end
+
+function children(dir, ext = ""; depth = 0, out = UTF8String[], prefix = "")
+  isdir(dir) || return []
+  for f in readdir(dir)
+    path = joinpath(dir, f)
+    if isfile(path) && ext ≠ nothing && endswith(path, ext)
+      push!(out, joinpath(prefix, f))
+    elseif isdir(path)
+      push!(out, joinpath(prefix, f, ""))
+      if depth > 0
+        children(path, ext, depth = depth-1, out = out, prefix = joinpath(prefix, f))
+      else
+      end
+    end
+  end
+  return out
+end
+
+function includepath()
+  path = Base.source_path()
+  path == nothing && return pwd()
+  return dirname(path)
+end
+
+function pathcompletions(line)
+  m = funcprefix(line)
+  m == nothing && return
+  func, pre = m
+  m = pathprefix(pre)
+  m == nothing && return
+  pre, path = m
+  dir = dirname(path)
+  if func == "include"
+    pathmeta(children(joinpath(includepath(), dir), ".jl", depth = 2), dir, path)
+  elseif func == "readcsv"
+    pathmeta(children(joinpath(pwd(), dir), ".csv", depth = 2), dir, path)
+  elseif func == "cd"
+    pathmeta(children(joinpath(pwd(), dir), nothing), dir, path)
+  end
+end
+
+# Package Completions
+# –––––––––––––––––––
+
+packages(dir = Pkg.dir()) =
+  @>> dir readdir filter(x->!ismatch(r"^\.|^METADATA$|^REQUIRE$", x))
+
+all_packages() = packages(Pkg.dir("METADATA"))
+
+required_packages() =
+  @>> Pkg.dir("REQUIRE") readall lines
+
+unused_packages() = setdiff(all_packages(), required_packages())
+
+pkgmeta(xs) = map(x -> d(:text=>x, :type=>"package"), xs)
+
+function pkgcompletions(line)
+  if ismatch(r"^using", line)
+    return pkgmeta(packages())
+  end
+  m = funcprefix(line)
+  m == nothing && return
+  func, _ = m
+  if func in ["Pkg.add", "Pkg.clone"]
+    pkgmeta(all_packages())
+  elseif func in ["Pkg.pin", "Pkg.checkout"]
+    pkgmeta(packages())
+  elseif func in ["Pkg.rm"]
+    pkgmeta(required_packages())
+  end
+end
+
+# Completions
+# –––––––––––
+
+const providers = [pkgcompletions, pathcompletions]
+
 function completions(line::AString, mod::Module = Main; default = true)
+  for provider in providers
+    cs = provider(line)
+    cs ≠ nothing && return cs
+  end
   pre = prefix(line)
   mod = getthing(mod, pre[1:end-1])
   if isa(mod, Module)
