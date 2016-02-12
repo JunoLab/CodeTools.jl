@@ -81,11 +81,15 @@ function prefix(line)
   split(match.match, ".")
 end
 
-function completions(line, mod = Main)
+function completions(line::AString, mod::Module = Main; default = true)
   pre = prefix(line)
   mod = getthing(mod, pre[1:end-1])
   if isa(mod, Module)
-    return namecompletions(mod, length(pre)>1)
+    qualified = length(pre) > 1
+    !(qualified || default) && return
+    return namecompletions(mod, qualified)
   end
   return []
 end
+
+completions(mod::Module) = completions("", mod, default = true)
