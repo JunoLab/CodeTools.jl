@@ -44,7 +44,7 @@ function withmeta(completion::AString, mod::Module)
   haskey(meta_cache, (mod, completion)) && return meta_cache[(mod, completion)]
   x = b[]
   c = d(:text => completion,
-        :type => completiontype(x),
+        :type => startswith(completion, "@") ? "macro" : completiontype(x),
         :rightLabel => string(mod))
   c[:displayText] = signature(b)
   c[:description] = description(b)
