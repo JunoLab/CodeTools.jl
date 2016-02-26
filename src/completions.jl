@@ -136,6 +136,8 @@ function pathcompletions(line)
     pathmeta(children(joinpath(pwd(), dir), ".csv", depth = 2), dir, path)
   elseif func == "cd"
     pathmeta(children(joinpath(pwd(), dir), nothing), dir, path)
+  elseif func == "open"
+    pathmeta(children(joinpath(pwd(), dir)), dir, path)
   end
 end
 
