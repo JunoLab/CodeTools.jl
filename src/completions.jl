@@ -17,7 +17,7 @@ const builtin_completions =
 # Module completions
 # ––––––––––––––––––
 
-const identifier_pattern = r"^@?[_\p{L}][_\p{L}\p{N}!]*$"
+const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}!]*+$"
 
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 
@@ -68,7 +68,7 @@ end
 
 const namecompletions = memoize_debounce(namecompletions_)
 
-const prefix_pattern = r"(@?[_\p{L}][_\p{L}\p{N}!]*\.?)+$|@$"
+const prefix_pattern = r"(@?[_\p{L}][\p{Xwd}!]*+\.?)+$|@$"
 
 function prefix(line)
   match = Base.match(prefix_pattern, line)
