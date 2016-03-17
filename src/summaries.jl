@@ -21,9 +21,15 @@ end
 
 flat_content(md::MD) = flat_content!(md.content)
 
-hasdoc(b::Binding) =
-  Docs.get_obj_meta(b) != nothing ||
-  Docs.get_obj_meta(b[]) != nothing
+function hasdoc(b::Binding)
+    for m in Docs.modules
+        meta = Docs.meta(m)
+        if haskey(meta, b) || haskey(meta, b[])
+            return true
+        end
+    end
+    false
+end
 
 function fullsignature(b::Binding)
   hasdoc(b) || return
