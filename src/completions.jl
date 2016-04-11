@@ -150,7 +150,7 @@ packages(dir = Pkg.dir()) =
 all_packages() = packages(Pkg.dir("METADATA"))
 
 required_packages() =
-  @>> Pkg.dir("REQUIRE") readall lines
+  @>> Pkg.dir("REQUIRE") readstring lines
 
 unused_packages() = setdiff(all_packages(), required_packages())
 

@@ -90,7 +90,7 @@ function filemodule_(path::AbstractString)
   loc = find_include(path)
   if loc != nothing
     file, line = loc
-    mod = codemodule(readall(file), line)
+    mod = codemodule(readstring(file), line)
     super = filemodule(file)
     if super != "" && mod != ""
       return "$super.$mod"
