@@ -12,8 +12,8 @@ function readdir′(dir)
   end
 end
 
-isdir′(f) = try isdir(f) catch ; false ; end
-isfile′(f) = try isfile(f) catch ; false ; end
+isdir′(f) = try isdir(f) catch false end
+isfile′(f) = try isfile(f) catch false end
 
 files(dir) =
   @>> dir readdir′ map!(f->joinpath(dir, f)) filter!(isfile′)
@@ -52,6 +52,23 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
+
+"""
+Takes Julia source code and a line number, gives back the string name
+of the module at that line.
+"""
+# TODO: take into account `end` statements
+function codemodule(code, line)
+  stack = UTF8String[]
+  for l in split(code, "\n")[1:line]
+    m = match(r"^\s*module ([A-Za-z]+)", l)
+    m == nothing && continue
+    push!(stack, m.captures[1])
+  end
+  return join(stack, ".")
+end
+
+codemodule(code, pos::Cursor) = codemodule(code, pos.line)
 
 """
 Takes a given Julia source file and another (absolute) path, gives the
