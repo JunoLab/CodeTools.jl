@@ -1,44 +1,32 @@
+# TODO: fix getqualifiedname -- doesn't work for e.g. functions with underscores (include_string)
 function thingorfunc(code, cursor, mod = Main; name = getqualifiedname(code, cursor))
   name == "" && (name = lastcall(scopes(code, cursor)))
   name == nothing ? name : getthing(mod, name, nothing)
 end
 
-function doc(code, cursor, mod = Main)
-  docs = UTF8String[]
+function doc(code, cursor, mod::Module = Main)
   name = getqualifiedname(code, cursor)
-
   thing = thingorfunc(code, cursor, mod; name = name)
-  thing == nothing || push!(docs, sprint(Base.help, thing))
-
-  texcmds = texcommands(name, code, cursor)
-  texcmds == nothing || push!(docs, texcmds)
-
-  help = join(docs, "\n\n")
-  help in ("No help information found.\n", "") ? nothing : help
+  doc(thing, mod)
 end
 
-function texcommands(name, code, cursor)
-  chars = collect(name)
-  if isempty(chars) # fallback if getqualifiedname failed
-    line = collect(lines(code)[cursor.line])
-    c = cursor.column
-    chars = line[max(c - 1, 1):min(c, length(line))]
-  end
-
-  syms = UTF8String[]
-  for char in chars
-    cmd = get(reverse_latex_commands, char, "")
-    isempty(cmd) || push!(syms, "  $(char)\u00a0 $(cmd)")
-  end
-  isempty(syms) && return
-
-  "LaTeX command$(length(syms) > 1 ? "s" : ""):\n\n$(join(unique(syms), "\n"))"
+function doc(word::AString, mod::Module = Main)
+  isdefined(mod, symbol(word)) || return Base.Markdown.parse("`$word` not defined")
+  b = Binding(mod, symbol(word))
+  hasdoc(b) ? Docs.doc(b) : "No documentation found."
 end
+
+methodsorwith(word::AString, mod::Module = Main) = isdefined(mod, symbol(word)) ?
+                                                   methodsorwith(include_string(word)) : []
+
+methodsorwith(word::Union{Module, DataType}) = methodswith(word)
+
+methodsorwith(word::Function) = methods(word)
+
+methodsorwith(word) = []
 
 function methodsorwith(code, cursor, mod = Main)
   thing = thingorfunc(code, cursor, mod)
   thing == nothing && return
-  return thing == Module ? methodswith(Module) :
-         (isa(thing, Function) && isgeneric(thing)) || isleaftype(thing) ? methods(thing) :
-         eval(Main, :(methodswith($(typeof(thing)), true))) # I have no idea why I thought this was necessary
+  methodsorwith(thing)
 end
