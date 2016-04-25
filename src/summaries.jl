@@ -5,6 +5,8 @@ import Base.Markdown: MD, Code, Paragraph
 # flat_content(xs::Vector) = reduce((xs, x) -> vcat(xs,flat_content(x)), [], xs)
 # flat_content(md::MD) = flat_content(md.content)
 flatten(md::MD) = MD(flat_content(md))
+flatten(arr::Array{Any,1}) = MD(flat_content!(arr))
+flatten(txt::Text{Function}) = MD(flat_content!([txt]))
 
 # Faster version
 
