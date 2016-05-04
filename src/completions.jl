@@ -38,8 +38,8 @@ completiontype(x) =
 const meta_cache = Dict{Any,Any}()
 
 function withmeta(completion::AString, mod::Module)
-  isdefined(mod, symbol(completion)) || return completion
-  b = Binding(mod, symbol(completion))
+  isdefined(mod, Symbol(completion)) || return completion
+  b = Binding(mod, Symbol(completion))
   mod = b.mod
   haskey(meta_cache, (mod, completion)) && return meta_cache[(mod, completion)]
   x = b[]
