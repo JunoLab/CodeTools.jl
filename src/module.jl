@@ -8,7 +8,7 @@ function readdir′(dir)
   try
     readdir(dir)
   catch e
-    UTF8String[]
+    String[]
   end
 end
 
@@ -24,7 +24,7 @@ dirs(dir) =
 jl_files(dir::AbstractString) = @>> dir files filter!(f->endswith(f, ".jl"))
 
 function jl_files(set)
-  files = Set{UTF8String}()
+  files = Set{String}()
   for dir in set, file in jl_files(dir)
     push!(files, file)
   end
@@ -35,7 +35,7 @@ end
 Takes a start directory and returns a set of nearby directories.
 """
 # Recursion + Mutable State = Job Security
-function dirsnearby(dir; descend = 1, ascend = 1, set = Set{UTF8String}())
+function dirsnearby(dir; descend = 1, ascend = 1, set = Set{String}())
   push!(set, dir)
   if descend > 0
     for down in dirs(dir)
@@ -59,7 +59,7 @@ of the module at that line.
 """
 # TODO: take into account `end` statements
 function codemodule(code, line)
-  stack = UTF8String[]
+  stack = String[]
   for l in split(code, "\n")[1:line]
     m = match(r"^\s*module ([A-Za-z]+)", l)
     m == nothing && continue

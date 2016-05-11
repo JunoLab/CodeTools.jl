@@ -4,7 +4,7 @@ function thingorfunc(code, cursor, mod = Main; name = getqualifiedname(code, cur
 end
 
 function doc(code, cursor, mod = Main)
-  docs = UTF8String[]
+  docs = String[]
   name = getqualifiedname(code, cursor)
 
   thing = thingorfunc(code, cursor, mod; name = name)
@@ -25,7 +25,7 @@ function texcommands(name, code, cursor)
     chars = line[max(c - 1, 1):min(c, length(line))]
   end
 
-  syms = UTF8String[]
+  syms = String[]
   for char in chars
     cmd = get(reverse_latex_commands, char, "")
     isempty(cmd) || push!(syms, "  $(char)\u00a0 $(cmd)")

@@ -72,7 +72,7 @@ const prefix_pattern = r"(@?[_\p{L}][\p{Xwd}!]*+\.?)+$|@$"
 
 function prefix(line)
   match = Base.match(prefix_pattern, line)
-  match == nothing && return UTF8String[]
+  match == nothing && return String[]
   split(match.match, ".")
 end
 
@@ -99,7 +99,7 @@ function pathmeta(cs, path, prefix)
   stringmeta(map(c -> replace(joinpath(path, c), r"^\./", ""), cs), prefix)
 end
 
-function children(dir, ext = ""; depth = 0, out = UTF8String[], prefix = "")
+function children(dir, ext = ""; depth = 0, out = String[], prefix = "")
   isdir(dir) || return []
   for f in readdir(dir)
     path = joinpath(dir, f)
