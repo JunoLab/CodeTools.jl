@@ -3,7 +3,7 @@
 function getthing(mod::Module, name::Vector, default = nothing)
   thing = mod
   for sym in name
-    sym = symbol(sym)
+    sym = Symbol(sym)
     if isdefined(thing, sym)
       thing = thing.(sym)
     else
@@ -16,7 +16,7 @@ end
 getthing(mod::Module, name::AbstractString, default = nothing) =
   name == "" ?
     default :
-    @as _ name split(_, ".", keep=false) map(symbol, _) getthing(mod, _, default)
+    @as _ name split(_, ".", keep=false) map(Symbol, _) getthing(mod, _, default)
 
 getthing(mod::Module, ::Void, default) = default
 

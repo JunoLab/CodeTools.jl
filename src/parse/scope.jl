@@ -14,10 +14,10 @@ const identifier_start = Regex("^$(identifier.pattern)")
 
 token(T) = Token{T}()
 
-Base.symbol{T}(t::Token{T}) = T
+Base.Symbol{T}(t::Token{T}) = T
 
 Lexer.peekchar(r::LineNumberingReader) =
-  eof(r)? Lexer.EOF : LNR.peekchar(r)
+  eof(r)? Lexer.EOF_CHAR : LNR.peekchar(r)
 
 function lexcomment(ts)
   Lexer.readchar(ts)
@@ -98,22 +98,22 @@ end
 
 immutable Scope
   kind::Symbol
-  name::UTF8String
+  name::String
 end
 
 Scope(kind) = Scope(kind, "")
-Scope(kind::Symbol, name::AbstractString) = Scope(kind, convert(UTF8String, name))
-Scope(kind, name) = Scope(symbol(kind), string(name))
+Scope(kind::Symbol, name::AbstractString) = Scope(kind, convert(String, name))
+Scope(kind, name) = Scope(Symbol(kind), string(name))
 
 ==(a::Scope, b::Scope) = a.kind == b.kind && a.name == b.name
 
-const blockopeners = Set(map(symbol, ["begin", "function", "type", "immutable",
+const blockopeners = Set(map(Symbol, ["begin", "function", "type", "immutable",
                                       "let", "macro", "for", "while",
                                       "quote", "if", "else", "elseif",
                                       "try", "finally", "catch", "do",
                                       "module"]))
 
-const blockclosers = Set(map(symbol, ["end", "else", "elseif", "catch", "finally"]))
+const blockclosers = Set(map(Symbol, ["end", "else", "elseif", "catch", "finally"]))
 
 function nextscope!(scopes, ts)
   lasttoken = ts.lasttoken
@@ -126,7 +126,7 @@ function nextscope!(scopes, ts)
     push!(scopes, Scope(:array, t))
   elseif last(scopes).kind in (:array, :call) && t in (')', ']', '}')
     pop!(scopes)
-  elseif t == symbol("end")
+  elseif t == Symbol("end")
     last(scopes).kind in (:block, :module) && lasttoken ≠ :(:) && pop!(scopes)
   elseif t == :using
     push!(scopes, Scope(:using))
@@ -150,10 +150,10 @@ function scopes(code::LineNumberingReader, cur::Optional(Cursor) = nothing)
   scs = [Scope(:toplevel)]
   while cur == nothing || cursor(code) < cur
     Lexer.skipws(ts) == true && continue
-    nextscope!(scs, ts) == Lexer.EOF && break
+    nextscope!(scs, ts) == Lexer.EOF_CHAR && break
   end
   t = ts.lasttoken
-  if isa(t, Token) && symbol(t) ≠ :whitespace && (cur == nothing ||
+  if isa(t, Token) && Symbol(t) ≠ :whitespace && (cur == nothing ||
                                                   cur < cursor(code))
     push!(scs, Scope(t))
   elseif last(scs).kind == :call && !(cur == nothing ||
@@ -176,11 +176,11 @@ scope(code, cur=nothing) = last(scopes(code, cur))
 
 function tokens(code::LineNumberingReader, cur::Optional(Cursor) = nothing)
   ts = Lexer.TokenStream(code)
-  words = Set{UTF8String}()
+  words = Set{String}()
   while true
     Lexer.skipws(ts); start = cursor(code)
     t = nexttoken(ts)
-    t == Lexer.EOF && break
+    t == Lexer.EOF_CHAR && break
     (cur != nothing && start ≤ cur ≤ cursor(code)) && continue
     isa(t, Symbol) && push!(words, string(t))
     isa(t, Vector{Symbol}) && push!(words, join(t, "."))
