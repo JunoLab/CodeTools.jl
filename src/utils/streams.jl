@@ -22,7 +22,7 @@ function startswith(stream::IO, s::AbstractString; eat = true, padding = false)
 end
 
 function startswith(stream::IO, c::Char; eat = true)
-  if peek(stream) == c
+  if peek(stream) == UInt32(c)
     eat && read(stream, Char)
     return true
   else

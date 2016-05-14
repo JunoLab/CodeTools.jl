@@ -27,7 +27,7 @@ accessible(mod::Module) =
   [names(mod, true, true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
-Base.getindex(b::Binding) = b.mod.(b.var)
+Base.getindex(b::Binding) = getfield(b.mod, b.var)
 
 completiontype(x) =
   isa(x, Module) ? "module" :
@@ -38,8 +38,8 @@ completiontype(x) =
 const meta_cache = Dict{Any,Any}()
 
 function withmeta(completion::AString, mod::Module)
-  isdefined(mod, symbol(completion)) || return completion
-  b = Binding(mod, symbol(completion))
+  isdefined(mod, Symbol(completion)) || return completion
+  b = Binding(mod, Symbol(completion))
   mod = b.mod
   haskey(meta_cache, (mod, completion)) && return meta_cache[(mod, completion)]
   x = b[]
@@ -72,7 +72,7 @@ const prefix_pattern = r"(@?[_\p{L}][\p{Xwd}!]*+\.?)+$|@$"
 
 function prefix(line)
   match = Base.match(prefix_pattern, line)
-  match == nothing && return UTF8String[]
+  match == nothing && return String[]
   split(match.match, ".")
 end
 
@@ -99,7 +99,7 @@ function pathmeta(cs, path, prefix)
   stringmeta(map(c -> replace(joinpath(path, c), r"^\./", ""), cs), prefix)
 end
 
-function children(dir, ext = ""; depth = 0, out = UTF8String[], prefix = "")
+function children(dir, ext = ""; depth = 0, out = String[], prefix = "")
   isdir(dir) || return []
   for f in readdir(dir)
     path = joinpath(dir, f)

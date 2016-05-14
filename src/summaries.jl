@@ -22,6 +22,7 @@ end
 flat_content(md::MD) = flat_content!(md.content)
 
 function hasdoc(b::Binding)
+    return false
     for m in Docs.modules
         meta = Docs.meta(m)
         if haskey(meta, b) || haskey(meta, b[])
