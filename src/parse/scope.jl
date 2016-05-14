@@ -4,6 +4,9 @@ import Base: ==
 
 using LNR
 import JuliaParser.Lexer
+import JuliaParser.Tokens.AbstractToken
+import JuliaParser.Tokens.val
+
 include("../utils/streams.jl")
 
 const identifier_inner = r"[\p{Xwd}′!]"
@@ -49,7 +52,7 @@ function lexstring(stream::IO)
   return token(multi ? :multistring : :string)
 end
 
-isidentifier(x::Symbol) = !(x in Lexer.syntactic_ops) && !(x in (:(:),))
+isidentifier(x::Symbol) = !(x in Lexer.SYNTACTIC_OPS) && !(x in (:(:),))
 isidentifier(x) = false
 
 function qualifiedname(ts, name = nexttoken(ts))
@@ -118,19 +121,25 @@ const blockclosers = Set(map(Symbol, ["end", "else", "elseif", "catch", "finally
 function nextscope!(scopes, ts)
   lasttoken = ts.lasttoken
   t = nexttoken(ts)
+  if typeof(t) <: AbstractToken
+    t = val(t)
+  end
+  if typeof(lasttoken) <: AbstractToken
+    lasttoken = val(lasttoken)
+  end
   if t in (:module, :baremodule) && isa(peektoken(ts), Symbol)
     push!(scopes, Scope(:module, nexttoken(ts)))
   elseif t in blockopeners
     push!(scopes, Scope(:block, t))
-  elseif t in ('(', '[', '{')
+  elseif isa(t, Char) && t in ('(', '[', '{')
     push!(scopes, Scope(:array, t))
-  elseif last(scopes).kind in (:array, :call) && t in (')', ']', '}')
+  elseif last(scopes).kind in (:array, :call) && isa(t, Char) && t in (')', ']', '}')
     pop!(scopes)
   elseif t == Symbol("end")
     last(scopes).kind in (:block, :module) && lasttoken ≠ :(:) && pop!(scopes)
   elseif t == :using
     push!(scopes, Scope(:using))
-  elseif t == '\n'
+  elseif isa(t, Char) && t == '\n'
     last(scopes).kind == :using && pop!(scopes)
   elseif isidentifier(t) || isa(t, Vector{Symbol})
     if peektoken(ts) == '('
@@ -150,7 +159,9 @@ function scopes(code::LineNumberingReader, cur::Optional(Cursor) = nothing)
   scs = [Scope(:toplevel)]
   while cur == nothing || cursor(code) < cur
     Lexer.skipws(ts) == true && continue
-    nextscope!(scs, ts) == Lexer.EOF_CHAR && break
+    let ns=nextscope!(scs, ts)
+      isa(ns, Char) && ns == Lexer.EOF_CHAR && break
+    end
   end
   t = ts.lasttoken
   if isa(t, Token) && Symbol(t) ≠ :whitespace && (cur == nothing ||

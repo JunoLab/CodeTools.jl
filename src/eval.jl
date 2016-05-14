@@ -5,7 +5,7 @@ function getthing(mod::Module, name::Vector, default = nothing)
   for sym in name
     sym = Symbol(sym)
     if isdefined(thing, sym)
-      thing = thing.(sym)
+      thing = getfield(thing, sym)
     else
       return default
     end
