@@ -32,7 +32,7 @@ Base.getindex(b::Binding) = getfield(b.mod, b.var)
 completiontype(x) =
   isa(x, Module) ? "module" :
   isa(x, DataType) ? "type" :
-  isa(x, Function) ? "function" :
+  isa(x, Function) ? "λ" :
   "constant"
 
 const meta_cache = Dict{Any,Any}()
