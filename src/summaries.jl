@@ -31,6 +31,8 @@ function hasdoc(b::Binding)
     false
 end
 
+hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
+
 function fullsignature(b::Binding)
   hasdoc(b) || return
   first = flatten(Docs.doc(b)).content[1]
