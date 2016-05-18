@@ -27,7 +27,7 @@ accessible(mod::Module) =
   [names(mod, true, true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
-Base.getindex(b::Binding) = b.mod.(b.var)
+Base.getindex(b::Binding) = getfield(b.mod, b.var)
 
 completiontype(x) =
   isa(x, Module) ? "module" :
