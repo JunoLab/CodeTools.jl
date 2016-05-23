@@ -33,7 +33,9 @@ end
 
 function fullsignature(b::Binding)
   hasdoc(b) || return
-  first = flatten(Docs.doc(b)).content[1]
+  docs = Docs.doc(b)
+  isa(docs, MD) || return
+  first = flatten(docs).content[1]
   code =
     isa(first, Code) ? first.code :
     isa(first, Paragraph) && isa(first.content[1], Code) ?
@@ -64,7 +66,9 @@ end
 
 function description(b::Binding)
   hasdoc(b) || return
-  md = flatten(Docs.doc(b))
+  docs = Docs.doc(b)
+  isa(docs, MD) || return
+  md = flatten(docs)
   first = md.content[1]
   if isa(first, Code)
     length(md.content) < 2 && return
