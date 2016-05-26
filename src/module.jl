@@ -8,23 +8,23 @@ function readdir′(dir)
   try
     readdir(dir)
   catch e
-    UTF8String[]
+    String[]
   end
 end
 
-isdir′(f) = try isdir(f) catch ; false ; end
-isfile′(f) = try isfile(f) catch ; false ; end
+isdir′(f) = try isdir(f) catch e false end
+isfile′(f) = try isfile(f) catch e false end
 
 files(dir) =
   @>> dir readdir′ map!(f->joinpath(dir, f)) filter!(isfile′)
 
 dirs(dir) =
-  @>> dir readdir′ filter!(f->!beginswith(f, ".")) map!(f->joinpath(dir, f)) filter!(isdir′)
+  @>> dir readdir′ filter!(f->!startswith(f, ".")) map!(f->joinpath(dir, f)) filter!(isdir′)
 
 jl_files(dir::AbstractString) = @>> dir files filter!(f->endswith(f, ".jl"))
 
 function jl_files(set)
-  files = Set{UTF8String}()
+  files = Set{String}()
   for dir in set, file in jl_files(dir)
     push!(files, file)
   end
@@ -35,7 +35,7 @@ end
 Takes a start directory and returns a set of nearby directories.
 """
 # Recursion + Mutable State = Job Security
-function dirsnearby(dir; descend = 1, ascend = 1, set = Set{UTF8String}())
+function dirsnearby(dir; descend = 1, ascend = 1, set = Set{String}())
   push!(set, dir)
   if descend > 0
     for down in dirs(dir)
@@ -52,6 +52,23 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
+
+"""
+Takes Julia source code and a line number, gives back the string name
+of the module at that line.
+"""
+# TODO: take into account `end` statements
+function codemodule(code, line)
+  stack = String[]
+  for l in split(code, "\n")[1:line]
+    m = match(r"^\s*module ([A-Za-z]+)", l)
+    m == nothing && continue
+    push!(stack, m.captures[1])
+  end
+  return join(stack, ".")
+end
+
+codemodule(code, pos::Cursor) = codemodule(code, pos.line)
 
 """
 Takes a given Julia source file and another (absolute) path, gives the
