@@ -1,3 +1,5 @@
+lines(s) = split(s, "\n")
+
 function memoize(f)
   mem = d()
   (args...) -> Base.@get!(mem, args, f(args...))
