@@ -60,9 +60,9 @@ withmeta(completions::Vector, mod::Module) =
 
 function namecompletions_(mod::Module, qualified = false)
   if !qualified
-    [withmeta(accessible(mod), mod); builtin_completions]
+    [withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), accessible(mod)), mod); builtin_completions]
   else
-    withmeta(filtervalid(names(mod, true)), mod)
+    withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), filtervalid(names(mod, true))), mod)
   end
 end
 
