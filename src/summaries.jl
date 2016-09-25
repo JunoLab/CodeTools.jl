@@ -24,7 +24,7 @@ flat_content(md::MD) = flat_content!(md.content)
 function hasdoc(b::Binding)
     for m in Docs.modules
         meta = Docs.meta(m)
-        if isdefined(m, Symbol(b)) && (haskey(meta, b) || haskey(meta, b[]))
+        if (haskey(meta, b) || haskey(meta, b[]))
             return true
         end
     end

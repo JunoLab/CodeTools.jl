@@ -27,13 +27,13 @@ accessible(mod::Module) =
   [names(mod, true, true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
-Base.getindex(b::Binding) = getfield(b.mod, b.var)
+Base.getindex(b::Binding) = isdefined(b.mod, b.var) ? getfield(b.mod, b.var) : nothing
 
 completiontype(x) =
-  isa(x, Module) ? "module" :
-  isa(x, DataType) ? "type" :
-  isa(x, Function) ? "λ" :
-  "constant"
+  isa(x, Module)   ? "module" :
+  isa(x, DataType) ? "type"   :
+  isa(x, Function) ? "λ"      :
+                     "constant"
 
 const meta_cache = Dict{Any,Any}()
 
