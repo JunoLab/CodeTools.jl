@@ -4,7 +4,7 @@ function getthing(mod::Module, name::Vector, default = nothing)
   thing = mod
   for sym in name
     sym = Symbol(sym)
-    if isdefined(thing, sym)
+    if isdefined(thing, sym) && !Base.isdeprecated(thing, sym)
       thing = getfield(thing, sym)
     else
       return default
