@@ -2,8 +2,6 @@
 # Some file utils
 # –––––––––––––––
 
-VERSION > v"0.4-" && (beginswith = Base.startswith)
-
 function readdir′(dir)
   try
     readdir(dir)
