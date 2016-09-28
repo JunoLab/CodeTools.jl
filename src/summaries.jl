@@ -43,7 +43,7 @@ function fullsignature(b::Binding)
     isa(first, Paragraph) && isa(first.content[1], Code) ?
       first.content[1].code :
       ""
-  if Base.startswith(code, string(b.var))
+  if startswith(code, string(b.var))
     split(code, "\n")[1]
   end
 end
