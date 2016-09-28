@@ -2,7 +2,7 @@ module CodeTools
 
 using MacroTools
 
-using LNR, Lazy, Requires, Compat
+using LNR, Lazy, Compat
 
 typealias AString AbstractString
 
