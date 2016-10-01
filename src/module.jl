@@ -64,7 +64,10 @@ function codemodule(code, line)
   for l in split(code, "\n")[1:line]
     # match all new modules and push them to stack
     m = match(r"^\s*(?:module|baremodule) ([A-Za-z]+)", l)
-    m != nothing && push!(stack, m.captures[1])
+    if m != nothing
+      push!(stack, m.captures[1])
+      continue
+    end
 
     # match all block openers that aren't modules
     if ismatch(r"^\s*(?:if|while|for|begin|function|macro|type|immutable|try|let)\b(?!.*\bend\b).*$", l)
@@ -81,7 +84,6 @@ function codemodule(code, line)
       else
         n_openers -= 1
       end
-      continue
     end
   end
   return join(stack, ".")
