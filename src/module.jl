@@ -55,13 +55,34 @@ end
 Takes Julia source code and a line number, gives back the string name
 of the module at that line.
 """
-# TODO: take into account `end` statements
+# TODO: do this properly (e.g. by using JuliaParser): `end`-recognition is super
+#       naive below
 function codemodule(code, line)
   stack = String[]
+  # count all unterminated block openers
+  n_openers = 0
   for l in split(code, "\n")[1:line]
-    m = match(r"^\s*module ([A-Za-z]+)", l)
-    m == nothing && continue
-    push!(stack, m.captures[1])
+    # match all new modules and push them to stack
+    m = match(r"^\s*(?:module|baremodule) ([A-Za-z]+)", l)
+    m != nothing && push!(stack, m.captures[1])
+
+    # match all block openers that aren't modules
+    if ismatch(r"^\s*(?:if|while|for|begin|function|macro|type|immutable|try|let)\b(?!.*\bend\b).*$", l)
+      n_openers += 1
+      continue
+    end
+
+    # match all `end`s with only whitespace around them
+    if ismatch(r"^\s*(?:end)\s*$", l)
+      # if there are no more open blocks, pop the latest
+      # added (sub)module from the stack if it isn't empty already
+      if n_openers == 0
+        !isempty(stack) && pop!(stack)
+      else
+        n_openers -= 1
+      end
+      continue
+    end
   end
   return join(stack, ".")
 end
