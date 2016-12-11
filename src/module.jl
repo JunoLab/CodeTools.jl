@@ -70,7 +70,7 @@ function codemodule(code, line)
     end
 
     # match all block openers that aren't modules
-    if ismatch(r"(if|while|for|begin|function|macro|type|immutable|try|let|do)\b(?!.*\bend\b).*$", l)
+    if ismatch(r"\b(if|while|for|begin|function|macro|type|immutable|try|let|do)\b(?!.*(\s|;)end\b).*$", l)
       n_openers += 1
       continue
     end
