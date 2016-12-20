@@ -20,6 +20,8 @@ getthing(mod::Module, name::AbstractString, default = nothing) =
 
 getthing(mod::Module, ::Void, default) = default
 
+getthing(mod::Module, x, default) = error("can't get $x from a module")
+
 getthing(args...) = getthing(Main, args...)
 
 # include_string with line numbers
