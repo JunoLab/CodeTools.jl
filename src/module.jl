@@ -52,22 +52,20 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
-SCOPE_STARTERS = [Tokenize.Tokens.BEGIN,
-                  Tokenize.Tokens.WHILE,
-                  Tokenize.Tokens.IF,
-                  Tokenize.Tokens.FOR,
-                  Tokenize.Tokens.TRY,
-                  Tokenize.Tokens.FUNCTION,
-                  Tokenize.Tokens.MACRO,
-                  Tokenize.Tokens.LET,
-                  Tokenize.Tokens.ABSTRACT,
-                  Tokenize.Tokens.TYPE,
-                  Tokenize.Tokens.BITSTYPE,
-                  Tokenize.Tokens.IMMUTABLE,
-                  Tokenize.Tokens.DO,
-                  Tokenize.Tokens.QUOTE,
-                  Tokenize.Tokens.MODULE,
-                  Tokenize.Tokens.BAREMODULE
+SCOPE_STARTERS = [Tokens.BEGIN,
+                  Tokens.WHILE,
+                  Tokens.IF,
+                  Tokens.FOR,
+                  Tokens.TRY,
+                  Tokens.FUNCTION,
+                  Tokens.MACRO,
+                  Tokens.LET,
+                  Tokens.ABSTRACT,
+                  Tokens.TYPE,
+                  Tokens.BITSTYPE,
+                  Tokens.IMMUTABLE,
+                  Tokens.DO,
+                  Tokens.QUOTE
                  ]
 
 """
@@ -76,43 +74,38 @@ of the module at that line.
 """
 function codemodule(code, line)
   stack = String[]
-  # count all unterminated block openers
+  # count all unterminated block openers and brackets
   n_openers = 0
-  unfinished_bracket = false
-  
+  n_brackets = 0
+
   ts = tokenize(code)
 
   for t in ts
+    Tokens.startpos(t)[1] >= line && return join(stack, ".")
 
-    Tokenize.Tokens.startpos(t)[1] >= line && return join(stack, ".")
-
-    if Tokenize.Tokens.kind(t) == Tokenize.Tokens.LSQUARE
-      unfinished_bracket = true
-      continue
-    end
-
-    if unfinished_bracket
-      if Tokenize.Tokens.kind(t) == Tokenize.Tokens.RSQUARE
-        unfinished_bracket = false
+    # ignore everything in square brackets, because of the ambiguity
+    # with `end` indexing
+    if Tokens.kind(t) == Tokens.LSQUARE
+      n_brackets += 1
+    elseif n_brackets > 0
+      if Tokens.kind(t) == Tokens.RSQUARE
+        n_brackets -= 1
       end
-      continue
-    end
-
-    if Tokenize.Tokens.exactkind(t) in SCOPE_STARTERS
-      if Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.MODULE ||
-         Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.BAREMODULE
-
-        pos = Tokenize.Lexers.position(ts)
-        # not sure what happens when changing the iterator state while iterating,
-        # but in theory nothing bad should happen, right?
-        t, e = Tokenize.Tokens.next(ts, false)
-        t, _ = Tokenize.Tokens.next(ts, e)
-        m = Tokenize.Tokens.untokenize(t)
-        push!(stack, m)
-      else
-        n_openers += 1
-      end
-    elseif Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.END
+    # new module
+    elseif Tokens.exactkind(t) == Tokens.MODULE ||
+           Tokens.exactkind(t) == Tokens.BAREMODULE
+      pos = Tokenize.Lexers.position(ts)
+      # not sure what happens when changing the iterator state while iterating,
+      # but in theory nothing bad should happen, right?
+      t, e = Tokens.next(ts, false)
+      t, _ = Tokens.next(ts, e)
+      m = Tokens.untokenize(t)
+      push!(stack, m)
+    # new non-module scope
+    elseif Tokens.exactkind(t) in SCOPE_STARTERS
+      n_openers += 1
+    # scope ended
+    elseif Tokens.exactkind(t) == Tokens.END
       if n_openers == 0
         !isempty(stack) && pop!(stack)
       else
