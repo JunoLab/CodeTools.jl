@@ -81,7 +81,7 @@ function codemodule(code, line)
   ts = tokenize(code)
 
   for t in ts
-    Tokens.startpos(t)[1] >= line && return join(stack, ".")
+    Tokens.startpos(t)[1] >= line && break
 
     # ignore everything in square brackets, because of the ambiguity
     # with `end` indexing
@@ -113,6 +113,7 @@ function codemodule(code, line)
       end
     end
   end
+  return join(stack, ".")
 end
 
 codemodule(code, pos::Cursor) = codemodule(code, pos.line)
