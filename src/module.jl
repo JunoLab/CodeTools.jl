@@ -1,3 +1,5 @@
+using Tokenize
+
 # –––––––––––––––
 # Some file utils
 # –––––––––––––––
@@ -50,35 +52,67 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
+SCOPE_STARTERS = [Tokenize.Tokens.BEGIN,
+                  Tokenize.Tokens.WHILE,
+                  Tokenize.Tokens.IF,
+                  Tokenize.Tokens.FOR,
+                  Tokenize.Tokens.TRY,
+                  Tokenize.Tokens.FUNCTION,
+                  Tokenize.Tokens.MACRO,
+                  Tokenize.Tokens.LET,
+                  Tokenize.Tokens.ABSTRACT,
+                  Tokenize.Tokens.TYPE,
+                  Tokenize.Tokens.BITSTYPE,
+                  Tokenize.Tokens.IMMUTABLE,
+                  Tokenize.Tokens.DO,
+                  Tokenize.Tokens.QUOTE,
+                  Tokenize.Tokens.MODULE,
+                  Tokenize.Tokens.BAREMODULE
+                 ]
 
 """
 Takes Julia source code and a line number, gives back the string name
 of the module at that line.
 """
-# TODO: do this properly (e.g. by using JuliaParser): `end`-recognition is super
-#       naive below
 function codemodule(code, line)
   stack = String[]
   # count all unterminated block openers
   n_openers = 0
-  for l in split(code, "\n")[1:line]
-    # match all new modules and push them to stack
-    m = match(r"^\s*(?:module|baremodule) ([A-Za-z]+)", l)
-    if m != nothing
-      push!(stack, m.captures[1])
+  unfinished_bracket = false
+  
+  ts = tokenize(code)
+
+  for t in ts
+
+    Tokenize.Tokens.startpos(t)[1] >= line && return join(stack, ".")
+
+    if Tokenize.Tokens.kind(t) == Tokenize.Tokens.LSQUARE
+      unfinished_bracket = true
       continue
     end
 
-    # match all block openers that aren't modules
-    if ismatch(r"\b(if|while|for|begin|function|macro|type|immutable|try|let|do|quote)\b(?!.*(\s|;)end\b).*$", l)
-      n_openers += 1
+    if unfinished_bracket
+      if Tokenize.Tokens.kind(t) == Tokenize.Tokens.RSQUARE
+        unfinished_bracket = false
+      end
       continue
     end
 
-    # match all `end`s with only whitespace around them
-    if ismatch(r"^\s*(?:end)\s*$", l)
-      # if there are no more open blocks, pop the latest
-      # added (sub)module from the stack if it isn't empty already
+    if Tokenize.Tokens.exactkind(t) in SCOPE_STARTERS
+      if Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.MODULE ||
+         Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.BAREMODULE
+
+        pos = Tokenize.Lexers.position(ts)
+        # not sure what happens when changing the iterator state while iterating,
+        # but in theory nothing bad should happen, right?
+        t, e = Tokenize.Tokens.next(ts, false)
+        t, _ = Tokenize.Tokens.next(ts, e)
+        m = Tokenize.Tokens.untokenize(t)
+        push!(stack, m)
+      else
+        n_openers += 1
+      end
+    elseif Tokenize.Tokens.exactkind(t) == Tokenize.Tokens.END
       if n_openers == 0
         !isempty(stack) && pop!(stack)
       else
@@ -86,7 +120,6 @@ function codemodule(code, line)
       end
     end
   end
-  return join(stack, ".")
 end
 
 codemodule(code, pos::Cursor) = codemodule(code, pos.line)
