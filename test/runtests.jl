@@ -64,4 +64,4 @@ end
 @test CodeTools.codemodule(code[1], 2) == "Mod1"
 @test CodeTools.codemodule(code[1], 4) == ""
 @test CodeTools.codemodule(code[2], 3) == "Mod2.Foo"
-@test CodeTools.codemodule(code[2], 4) == "Mod2"
+@test CodeTools.codemodule(code[2], 5) == "Mod2"
