@@ -77,11 +77,13 @@ function codemodule(code, line)
   # count all unterminated block openers and brackets
   n_openers = 0
   n_brackets = 0
+  # index of next modulename token
+  next_modulename = -1
 
   ts = tokenize(code)
 
-  for t in ts
-    Tokens.startpos(t)[1] >= line && break
+  for (i, t) in enumerate(ts)
+    Tokens.startpos(t)[1] > line && break
 
     # ignore everything in square brackets, because of the ambiguity
     # with `end` indexing
@@ -91,28 +93,17 @@ function codemodule(code, line)
       if Tokens.kind(t) == Tokens.RSQUARE
         n_brackets -= 1
       end
-    # new module
-    elseif Tokens.exactkind(t) == Tokens.MODULE ||
-           Tokens.exactkind(t) == Tokens.BAREMODULE
-      pos = Tokenize.Lexers.position(ts)
-      # not sure what happens when changing the iterator state while iterating,
-      # but in theory nothing bad should happen, right?
-      t, e = Tokens.next(ts, false)
-      t, _ = Tokens.next(ts, e)
-      m = Tokens.untokenize(t)
-      push!(stack, m)
-    # new non-module scope
-    elseif Tokens.exactkind(t) in SCOPE_STARTERS
+    elseif Tokens.exactkind(t) in [Tokens.MODULE, Tokens.BAREMODULE] # new module
+      next_modulename = i + 2
+    elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER
+      push!(stack, Tokens.untokenize(t))
+    elseif Tokens.exactkind(t) in SCOPE_STARTERS # new non-module scope
       n_openers += 1
-    # scope ended
-    elseif Tokens.exactkind(t) == Tokens.END
-      if n_openers == 0
-        !isempty(stack) && pop!(stack)
-      else
-        n_openers -= 1
-      end
+    elseif Tokens.exactkind(t) == Tokens.END # scope ended
+      n_openers == 0 ? (!isempty(stack) && pop!(stack)) : n_openers -= 1
     end
   end
+
   return join(stack, ".")
 end
 
