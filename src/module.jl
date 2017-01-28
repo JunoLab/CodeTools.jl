@@ -52,21 +52,22 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
-SCOPE_STARTERS = [Tokens.BEGIN,
-                  Tokens.WHILE,
-                  Tokens.IF,
-                  Tokens.FOR,
-                  Tokens.TRY,
-                  Tokens.FUNCTION,
-                  Tokens.MACRO,
-                  Tokens.LET,
-                  Tokens.ABSTRACT,
-                  Tokens.TYPE,
-                  Tokens.BITSTYPE,
-                  Tokens.IMMUTABLE,
-                  Tokens.DO,
-                  Tokens.QUOTE
-                 ]
+const SCOPE_STARTERS = [Tokens.BEGIN,
+                        Tokens.WHILE,
+                        Tokens.IF,
+                        Tokens.FOR,
+                        Tokens.TRY,
+                        Tokens.FUNCTION,
+                        Tokens.MACRO,
+                        Tokens.LET,
+                        Tokens.ABSTRACT,
+                        Tokens.TYPE,
+                        Tokens.BITSTYPE,
+                        Tokens.IMMUTABLE,
+                        Tokens.DO,
+                        Tokens.QUOTE]
+
+const MODULE_STARTERS = [Tokens.MODULE, Tokens.BAREMODULE]
 
 """
 Takes Julia source code and a line number, gives back the string name
@@ -93,13 +94,13 @@ function codemodule(code, line)
       if Tokens.kind(t) == Tokens.RSQUARE
         n_brackets -= 1
       end
-    elseif Tokens.exactkind(t) in [Tokens.MODULE, Tokens.BAREMODULE] # new module
+    elseif Tokens.exactkind(t) in MODULE_STARTERS  # new module
       next_modulename = i + 2
     elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER
       push!(stack, Tokens.untokenize(t))
-    elseif Tokens.exactkind(t) in SCOPE_STARTERS # new non-module scope
+    elseif Tokens.exactkind(t) in SCOPE_STARTERS  # new non-module scope
       n_openers += 1
-    elseif Tokens.exactkind(t) == Tokens.END # scope ended
+    elseif Tokens.exactkind(t) == Tokens.END  # scope ended
       n_openers == 0 ? (!isempty(stack) && pop!(stack)) : n_openers -= 1
     end
   end
