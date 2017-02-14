@@ -45,3 +45,23 @@ with multiline docs
   @test CodeTools.signature(Binding(Main, :foo)) == nothing
   @test CodeTools.completiontype(foo) == "constant"
 end
+
+# module detection tests
+code = ["""
+module Mod1
+[x for x=1:2]
+end
+1+1
+""",
+"""
+module Mod2
+module Foo
+# for
+end
+1+1
+"""]
+
+@test CodeTools.codemodule(code[1], 2) == "Mod1"
+@test CodeTools.codemodule(code[1], 4) == ""
+@test CodeTools.codemodule(code[2], 3) == "Mod2.Foo"
+@test CodeTools.codemodule(code[2], 5) == "Mod2"

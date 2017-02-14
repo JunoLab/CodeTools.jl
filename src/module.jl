@@ -1,3 +1,5 @@
+using Tokenize
+
 # –––––––––––––––
 # Some file utils
 # –––––––––––––––
@@ -50,42 +52,59 @@ end
 # ––––––––––––––
 # The Good Stuff
 # ––––––––––––––
+const SCOPE_STARTERS = [Tokens.BEGIN,
+                        Tokens.WHILE,
+                        Tokens.IF,
+                        Tokens.FOR,
+                        Tokens.TRY,
+                        Tokens.FUNCTION,
+                        Tokens.MACRO,
+                        Tokens.LET,
+                        Tokens.ABSTRACT,
+                        Tokens.TYPE,
+                        Tokens.BITSTYPE,
+                        Tokens.IMMUTABLE,
+                        Tokens.DO,
+                        Tokens.QUOTE]
+
+const MODULE_STARTERS = [Tokens.MODULE, Tokens.BAREMODULE]
 
 """
 Takes Julia source code and a line number, gives back the string name
 of the module at that line.
 """
-# TODO: do this properly (e.g. by using JuliaParser): `end`-recognition is super
-#       naive below
 function codemodule(code, line)
   stack = String[]
-  # count all unterminated block openers
+  # count all unterminated block openers and brackets
   n_openers = 0
-  for l in split(code, "\n")[1:line]
-    # match all new modules and push them to stack
-    m = match(r"^\s*(?:module|baremodule) ([A-Za-z]+)", l)
-    if m != nothing
-      push!(stack, m.captures[1])
-      continue
-    end
+  n_brackets = 0
+  # index of next modulename token
+  next_modulename = -1
 
-    # match all block openers that aren't modules
-    if ismatch(r"\b(if|while|for|begin|function|macro|type|immutable|try|let|do|quote)\b(?!.*(\s|;)end\b).*$", l)
-      n_openers += 1
-      continue
-    end
+  ts = tokenize(code)
 
-    # match all `end`s with only whitespace around them
-    if ismatch(r"^\s*(?:end)\s*$", l)
-      # if there are no more open blocks, pop the latest
-      # added (sub)module from the stack if it isn't empty already
-      if n_openers == 0
-        !isempty(stack) && pop!(stack)
-      else
-        n_openers -= 1
+  for (i, t) in enumerate(ts)
+    Tokens.startpos(t)[1] > line && break
+
+    # ignore everything in square brackets, because of the ambiguity
+    # with `end` indexing
+    if Tokens.kind(t) == Tokens.LSQUARE
+      n_brackets += 1
+    elseif n_brackets > 0
+      if Tokens.kind(t) == Tokens.RSQUARE
+        n_brackets -= 1
       end
+    elseif Tokens.exactkind(t) in MODULE_STARTERS  # new module
+      next_modulename = i + 2
+    elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER
+      push!(stack, Tokens.untokenize(t))
+    elseif Tokens.exactkind(t) in SCOPE_STARTERS  # new non-module scope
+      n_openers += 1
+    elseif Tokens.exactkind(t) == Tokens.END  # scope ended
+      n_openers == 0 ? (!isempty(stack) && pop!(stack)) : n_openers -= 1
     end
   end
+
   return join(stack, ".")
 end
 
