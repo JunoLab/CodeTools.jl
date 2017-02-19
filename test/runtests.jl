@@ -59,9 +59,25 @@ module Foo
 # for
 end
 1+1
-"""]
+""",
+"""
+module Mod3
+abstract foo
+end
+""",
+"""
+module Mod4
+bitstype 8 foo
+end
+"""
+
+]
 
 @test CodeTools.codemodule(code[1], 2) == "Mod1"
 @test CodeTools.codemodule(code[1], 4) == ""
 @test CodeTools.codemodule(code[2], 3) == "Mod2.Foo"
 @test CodeTools.codemodule(code[2], 5) == "Mod2"
+@test CodeTools.codemodule(code[3], 2) == "Mod3"
+@test CodeTools.codemodule(code[3], 3) == ""
+@test CodeTools.codemodule(code[4], 2) == "Mod4"
+@test CodeTools.codemodule(code[4], 3) == ""
