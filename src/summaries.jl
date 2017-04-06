@@ -37,11 +37,12 @@ function fullsignature(b::Binding)
   hasdoc(b) || return
   docs = Docs.doc(b)
   isa(docs, MD) || return
-  first = flatten(docs).content[1]
+  md = flatten(docs).content
+  first = length(md) > 0 ? md[1] : ""
   code =
     isa(first, Code) ? first.code :
-    isa(first, Paragraph) && isa(first.content[1], Code) ?
-      first.content[1].code :
+    isa(first, Paragraph) && isa(md[1], Code) ?
+      md[1].code :
       ""
   if startswith(code, string(b.var))
     split(code, "\n")[1]
@@ -70,11 +71,12 @@ function description(b::Binding)
   hasdoc(b) || return
   docs = Docs.doc(b)
   isa(docs, MD) || return
-  md = flatten(docs)
-  first = md.content[1]
+  md = flatten(docs).content
+  length(md) > 0 || return
+  first = md[1]
   if isa(first, Code)
-    length(md.content) < 2 && return
-    first = md.content[2]
+    length(md) < 2 && return
+    first = md[2]
   end
   if isa(first, Paragraph)
     desc = Markdown.plain(first)
