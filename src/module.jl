@@ -73,9 +73,10 @@ of the module at that line.
 """
 function codemodule(code, line)
   stack = String[]
-  # count all unterminated block openers and brackets
+  # count all unterminated block openers, brackets, and parens
   n_openers = 0
   n_brackets = 0
+  n_parens = 0
   # index of next modulename token
   next_modulename = -1
 
@@ -84,13 +85,20 @@ function codemodule(code, line)
   for (i, t) in enumerate(ts)
     Tokens.startpos(t)[1] > line && break
 
-    # ignore everything in square brackets, because of the ambiguity
-    # with `end` indexing
+    # Ignore everything in brackets or parnetheses, because any scope started in
+    # them also needs to be closed in them. That way, we don't need special
+    # handling for comprehensions and `end`-indexing.
     if Tokens.kind(t) == Tokens.LSQUARE
       n_brackets += 1
     elseif n_brackets > 0
       if Tokens.kind(t) == Tokens.RSQUARE
         n_brackets -= 1
+      end
+    elseif Tokens.kind(t) == Tokens.LPAREN
+      n_parens += 1
+    elseif n_parens > 0
+      if Tokens.kind(t) == Tokens.RPAREN
+        n_parens -= 1
       end
     elseif Tokens.exactkind(t) in MODULE_STARTERS  # new module
       next_modulename = i + 2

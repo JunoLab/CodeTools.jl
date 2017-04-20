@@ -163,7 +163,7 @@ function pkgcompletions(line)
   m = funcprefix(line)
   m == nothing && return
   func, _ = m
-  if func in ["Pkg.add", "Pkg.clone", "Pkg.build"]
+  if func in ["Pkg.add", "Pkg.clone", "Pkg.build", "Pkg.test"]
     pkgmeta(all_packages())
   elseif func in ["Pkg.pin", "Pkg.checkout"]
     pkgmeta(packages())

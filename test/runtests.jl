@@ -68,6 +68,7 @@ end
 """
 module Mod4
 bitstype 8 foo
+(i for i = 1:10)
 end
 """
 
@@ -80,4 +81,5 @@ end
 @test CodeTools.codemodule(code[3], 2) == "Mod3"
 @test CodeTools.codemodule(code[3], 3) == ""
 @test CodeTools.codemodule(code[4], 2) == "Mod4"
-@test CodeTools.codemodule(code[4], 3) == ""
+@test CodeTools.codemodule(code[4], 3) == "Mod4"
+@test CodeTools.codemodule(code[4], 4) == ""
