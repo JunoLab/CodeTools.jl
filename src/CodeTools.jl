@@ -4,7 +4,7 @@ module CodeTools
 
 using MacroTools, Lazy, LNR
 
-typealias AString AbstractString
+const AString = AbstractString
 
 include("utils.jl")
 include("eval.jl")
