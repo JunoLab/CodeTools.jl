@@ -2,7 +2,7 @@ __precompile__()
 
 module CodeTools
 
-using MacroTools, Lazy, LNR
+using Lazy, LNR
 
 const AString = AbstractString
 

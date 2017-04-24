@@ -1,5 +1,4 @@
 julia 0.5
-Lazy
-MacroTools
+Lazy 0.6
 LNR
-Tokenize
+Tokenize 0.1
