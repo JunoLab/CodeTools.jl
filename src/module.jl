@@ -63,7 +63,8 @@ const SCOPE_STARTERS = [Tokens.BEGIN,
                         Tokens.TYPE,
                         Tokens.IMMUTABLE,
                         Tokens.DO,
-                        Tokens.QUOTE]
+                        Tokens.QUOTE,
+                        Tokens.STRUCT]
 
 const MODULE_STARTERS = [Tokens.MODULE, Tokens.BAREMODULE]
 
