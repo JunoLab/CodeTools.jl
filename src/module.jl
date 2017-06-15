@@ -16,10 +16,10 @@ isdir′(f) = try isdir(f) catch e false end
 isfile′(f) = try isfile(f) catch e false end
 
 files(dir) =
-  @_ dir readdir′(_) map!(f->joinpath(dir, f), _ ,_) filter!(isfile′, _)
+  @as x dir readdir′(x) map!(f->joinpath(dir, f), x ,x) filter!(isfile′, x)
 
 dirs(dir) =
-  @_ dir readdir′(_) filter!(f->!startswith(f, "."), _) map!(f->joinpath(dir, f), _, _) filter!(isdir′, _)
+  @as x dir readdir′(x) filter!(f->!startswith(f, "."), x) map!(f->joinpath(dir, f), x, x) filter!(isdir′, x)
 
 jl_files(dir::AbstractString) = @>> dir files filter!(f->endswith(f, ".jl"))
 
