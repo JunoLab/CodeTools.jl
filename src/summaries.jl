@@ -31,11 +31,19 @@ function hasdoc(b::Binding)
     false
 end
 
+function trygetdoc(b)
+  docs = try
+    Docs.doc(b)
+  catch
+    ""
+  end
+end
+
 hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
 
 function fullsignature(b::Binding)
   hasdoc(b) || return
-  docs = Docs.doc(b)
+  docs = trygetdoc(b)
   isa(docs, MD) || return
   md = flatten(docs).content
   first = length(md) > 0 ? md[1] : ""
@@ -69,7 +77,7 @@ end
 
 function description(b::Binding)
   hasdoc(b) || return
-  docs = Docs.doc(b)
+  docs = trygetdoc(b)
   isa(docs, MD) || return
   md = flatten(docs).content
   length(md) > 0 || return
