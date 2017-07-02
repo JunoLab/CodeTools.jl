@@ -68,7 +68,7 @@ end
 
 const namecompletions = memoize_debounce(namecompletions_)
 
-const prefix_pattern = r"(@?[_\p{L}][\p{Xwd}!]*+\.?)+$|@$"
+const prefix_pattern = r"(@?[_\p{L}][\p{Xwd}!]*+\.?@?)+$|@$"
 
 function prefix(line)
   match = Base.match(prefix_pattern, line)

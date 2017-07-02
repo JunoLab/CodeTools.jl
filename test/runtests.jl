@@ -83,3 +83,8 @@ end
 @test CodeTools.codemodule(code[4], 2) == "Mod4"
 @test CodeTools.codemodule(code[4], 3) == "Mod4"
 @test CodeTools.codemodule(code[4], 4) == ""
+
+@testset "completions" begin
+  @test CodeTools.prefix("MacroTools.@") == ["MacroTools", "@"]
+  @test length(CodeTools.completions("CodeTools.pre")) > 0
+end
