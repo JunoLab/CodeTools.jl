@@ -130,14 +130,16 @@ function pathcompletions(line)
   m == nothing && return
   pre, path = m
   dir = dirname(path)
-  if func == "include"
-    pathmeta(children(joinpath(includepath(), dir), ".jl", depth = 2), dir, path)
-  elseif func == "readcsv"
-    pathmeta(children(joinpath(pwd(), dir), ".csv", depth = 2), dir, path)
-  elseif func == "cd"
-    pathmeta(children(joinpath(pwd(), dir), nothing), dir, path)
-  elseif func == "open"
-    pathmeta(children(joinpath(pwd(), dir)), dir, path)
+  try
+    if func == "include"
+      pathmeta(children(joinpath(includepath(), dir), ".jl", depth = 2), dir, path)
+    elseif func == "readcsv"
+      pathmeta(children(joinpath(pwd(), dir), ".csv", depth = 2), dir, path)
+    elseif func == "cd"
+      pathmeta(children(joinpath(pwd(), dir), nothing), dir, path)
+    elseif func == "open"
+      pathmeta(children(joinpath(pwd(), dir)), dir, path)
+    end
   end
 end
 
