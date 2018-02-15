@@ -83,6 +83,8 @@ function codemodule(code, line)
 
   ts = tokenize(code)
 
+  last_token = nothing
+
   for (i, t) in enumerate(ts)
     Tokens.startpos(t)[1] > line && break
 
@@ -101,15 +103,16 @@ function codemodule(code, line)
       if Tokens.kind(t) == Tokens.RPAREN
         n_parens -= 1
       end
-    elseif Tokens.exactkind(t) in MODULE_STARTERS  # new module
+    elseif Tokens.exactkind(t) in MODULE_STARTERS && (last_token == nothing || Tokens.kind(last_token) == Tokens.WHITESPACE) # new module
       next_modulename = i + 2
-    elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER
+    elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER && Tokens.kind(last_token) == Tokens.WHITESPACE
       push!(stack, Tokens.untokenize(t))
     elseif Tokens.exactkind(t) in SCOPE_STARTERS  # new non-module scope
       n_openers += 1
     elseif Tokens.exactkind(t) == Tokens.END  # scope ended
       n_openers == 0 ? (!isempty(stack) && pop!(stack)) : n_openers -= 1
     end
+    last_token = t
   end
 
   return join(stack, ".")

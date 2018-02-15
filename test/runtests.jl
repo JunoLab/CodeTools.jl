@@ -70,8 +70,17 @@ module Mod4
 bitstype 8 foo
 (i for i = 1:10)
 end
+""",
 """
-
+:module Foo
+1+1
+end
+""",
+"""
+bla.module
+foo
+end
+"""
 ]
 
 @test CodeTools.codemodule(code[1], 2) == "Mod1"
@@ -83,6 +92,12 @@ end
 @test CodeTools.codemodule(code[4], 2) == "Mod4"
 @test CodeTools.codemodule(code[4], 3) == "Mod4"
 @test CodeTools.codemodule(code[4], 4) == ""
+@test CodeTools.codemodule(code[5], 1) == ""
+@test CodeTools.codemodule(code[5], 2) == ""
+@test CodeTools.codemodule(code[5], 3) == ""
+@test CodeTools.codemodule(code[6], 1) == ""
+@test CodeTools.codemodule(code[6], 2) == ""
+@test CodeTools.codemodule(code[6], 3) == ""
 
 @testset "completions" begin
   @test CodeTools.prefix("MacroTools.@") == ["MacroTools", "@"]
