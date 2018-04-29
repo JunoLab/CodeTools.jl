@@ -31,10 +31,10 @@ function jl_files(set)
   return files
 end
 
+# Recursion + Mutable State = Job Security
 """
 Takes a start directory and returns a set of nearby directories.
 """
-# Recursion + Mutable State = Job Security
 function dirsnearby(dir; descend = 1, ascend = 1, set = Set{String}())
   push!(set, dir)
   if descend > 0

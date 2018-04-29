@@ -37,7 +37,7 @@ completiontype(x) =
 
 const meta_cache = Dict{Any,Any}()
 
-function withmeta(completion::AString, mod::Module)
+function withmeta(completion::AbstractString, mod::Module)
   isdefined(mod, Symbol(completion)) || return completion
   b = Binding(mod, Symbol(completion))
   mod = b.mod
@@ -62,7 +62,7 @@ function namecompletions_(mod::Module, qualified = false)
   if !qualified
     [withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), accessible(mod)), mod); builtin_completions]
   else
-    withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), filtervalid(names(mod, true))), mod)
+    withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), filtervalid(names(mod, all=true))), mod)
   end
 end
 
@@ -145,32 +145,13 @@ end
 
 # Package Completions
 # –––––––––––––––––––
+# not sure why this errors with "ArgumentError: Module Pkg3 not found in current path."
 
-packages(dir = Pkg.dir()) =
-  @>> dir readdir filter(x->!ismatch(r"^\.|^METADATA$|^REQUIRE$", x))
-
-all_packages() = packages(Pkg.dir("METADATA"))
-
-required_packages() =
-  @>> Pkg.dir("REQUIRE") readstring lines
-
-unused_packages() = setdiff(all_packages(), required_packages())
-
-pkgmeta(xs) = map(x -> d(:text=>x, :type=>"package"), xs)
+using Pkg3
 
 function pkgcompletions(line)
-  if ismatch(r"^using", line)
-    return pkgmeta(packages())
-  end
-  m = funcprefix(line)
-  m == nothing && return
-  func, _ = m
-  if func in ["Pkg.add", "Pkg.clone", "Pkg.build", "Pkg.test"]
-    pkgmeta(all_packages())
-  elseif func in ["Pkg.pin", "Pkg.checkout"]
-    pkgmeta(packages())
-  elseif func in ["Pkg.rm"]
-    pkgmeta(required_packages())
+  if ismatch(r"^using|^import", line)
+    return pkgmeta(Pkg3.API.installed())
   end
 end
 
@@ -179,7 +160,7 @@ end
 
 const providers = [pkgcompletions, pathcompletions]
 
-function completions(line::AString, mod::Module = Main; default = true)
+function completions(line::AbstractString, mod::Module = Main; default = true)
   for provider in providers
     cs = provider(line)
     cs ≠ nothing && return cs

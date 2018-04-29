@@ -18,7 +18,7 @@ getthing(mod::Module, name::AbstractString, default = nothing) =
     default :
     @as x name split(x, ".", keep=false) map(Symbol, x) getthing(mod, x, default)
 
-getthing(mod::Module, ::Void, default) = default
+getthing(mod::Module, ::Nothing, default) = default
 
 getthing(mod::Module, x, default) = error("can't get $x from a module")
 

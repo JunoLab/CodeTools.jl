@@ -1,5 +1,5 @@
 import Base.Docs: Binding, @var
-import Base.Markdown: MD, Code, Paragraph
+import Markdown: MD, Code, Paragraph
 
 # flat_content(md) = md
 # flat_content(xs::Vector) = reduce((xs, x) -> vcat(xs,flat_content(x)), [], xs)
@@ -60,7 +60,7 @@ end
 function signature(b::Binding)
   sig = fullsignature(b)
   sig == nothing && return
-  replace(sig, r" -> .*$", "")
+  replace(sig, r" -> .*$" => "")
 end
 
 function returns(b::Binding)
@@ -89,7 +89,7 @@ function description(b::Binding)
   if isa(first, Paragraph)
     desc = Markdown.plain(first)
     return length(desc) > 100 ?
-      desc[1:100]*"..." :
+      desc[1:nextind(desc, 0, 99)]*"..." :
       desc
   end
 end

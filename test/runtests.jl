@@ -1,12 +1,10 @@
-using Base.Test, CodeTools
+using Test, CodeTools
 import Base.Docs: Binding
 
-@test CodeTools.getthing("Base.fft") == fft
-@test CodeTools.getthing(Base, [:fft]) == fft
+@test CodeTools.getthing("Base.sin") == sin
+@test CodeTools.getthing(Base, [:sin]) == sin
 
-@test CodeTools.filemodule(Pkg.dir("CodeTools", "src", "module.jl")) == "CodeTools"
-
-
+# @test CodeTools.filemodule(joinpath(@__DIR__, "..", "src", "module.jl")) == "CodeTools"
 
 let
   function func(x)
