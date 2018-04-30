@@ -21,7 +21,7 @@ let
 docs
 
 more docs which aren't in the description
-  """ ->
+  """
   function docfunc(x) end
 
   @test CodeTools.hasdoc(docfunc) == true
@@ -35,8 +35,8 @@ let
 i'm a constant
 
 with multiline docs
-  """ ->
-  const foo = :bar
+  """
+  foo = :bar
 
   @test CodeTools.hasdoc(foo) == true
   @test chomp(CodeTools.description(Binding(Main, :foo))) == "i'm a constant"

@@ -1,5 +1,5 @@
 import Base.Docs: Binding, @var
-import Markdown: MD, Code, Paragraph
+using Markdown: MD, Code, Paragraph
 
 # flat_content(md) = md
 # flat_content(xs::Vector) = reduce((xs, x) -> vcat(xs,flat_content(x)), [], xs)

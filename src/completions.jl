@@ -21,7 +21,7 @@ const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}!]*+$"
 
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 
-filtervalid(names) = @>> names map(string) filter(x->ismatch(identifier_pattern, x))
+filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern, x))
 
 accessible(mod::Module) =
   [names(mod, true, true);
@@ -150,7 +150,7 @@ end
 using Pkg3
 
 function pkgcompletions(line)
-  if ismatch(r"^using|^import", line)
+  if occursin(r"^using|^import", line)
     return pkgmeta(Pkg3.API.installed())
   end
 end

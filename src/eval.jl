@@ -16,7 +16,7 @@ end
 getthing(mod::Module, name::AbstractString, default = nothing) =
   name == "" ?
     default :
-    @as x name split(x, ".", keep=false) map(Symbol, x) getthing(mod, x, default)
+    @as x name split(x, ".", keepempty=false) map(Symbol, x) getthing(mod, x, default)
 
 getthing(mod::Module, ::Nothing, default) = default
 
