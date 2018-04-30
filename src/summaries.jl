@@ -1,5 +1,5 @@
 import Base.Docs: Binding, @var
-using Markdown: MD, Code, Paragraph
+using Markdown: MD, Code, Paragraph, plain
 
 # flat_content(md) = md
 # flat_content(xs::Vector) = reduce((xs, x) -> vcat(xs,flat_content(x)), [], xs)
@@ -87,7 +87,7 @@ function description(b::Binding)
     first = md[2]
   end
   if isa(first, Paragraph)
-    desc = Markdown.plain(first)
+    desc = plain(first)
     return length(desc) > 100 ?
       desc[1:nextind(desc, 0, 99)]*"..." :
       desc

@@ -160,7 +160,7 @@ function filemodule_(path::AbstractString)
   loc = find_include(path)
   if loc != nothing
     file, line = loc
-    mod = codemodule(readstring(file), line)
+    mod = codemodule(read(file, String), line)
     super = filemodule(file)
     if super != "" && mod != ""
       return "$super.$mod"
@@ -176,7 +176,7 @@ const filemodule = memoize(filemodule_)
 # Get all modules
 
 children(m::Module) =
-  @>> names(m, true) map(x->getthing(m, [x])) filter(x->isa(x, Module) && x ≠ m)
+  @>> names(m, all=true) map(x->getthing(m, [x])) filter(x->isa(x, Module) && x ≠ m)
 
 function allchildren(m::Module, cs = Set{Module}())
   for c in children(m)

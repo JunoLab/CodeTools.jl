@@ -26,12 +26,8 @@ getthing(args...) = getthing(Main, args...)
 
 # include_string with line numbers
 
-function Base.include_string(s::AbstractString, fname::AbstractString, line::Integer)
-  include_string("\n"^(line-1)*s, fname)
-end
-
-function Base.include_string(mod::Module, args...)
-  eval(mod, :(include_string($(args...))))
+function Base.include_string(mod, s::AbstractString, fname::AbstractString, line::Integer)
+  include_string(mod, "\n"^(line-1)*s, fname)
 end
 
 # Get the current module for a file/pos

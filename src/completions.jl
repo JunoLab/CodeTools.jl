@@ -24,7 +24,7 @@ moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern, x))
 
 accessible(mod::Module) =
-  [names(mod, true, true);
+  [names(mod, all=true, imported=true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
 Base.getindex(b::Binding) = isdefined(b.mod, b.var) ? getfield(b.mod, b.var) : nothing
@@ -149,9 +149,11 @@ end
 
 using Pkg3
 
+pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
+
 function pkgcompletions(line)
   if occursin(r"^using|^import", line)
-    return pkgmeta(Pkg3.API.installed())
+    return pkgmeta(sort!(collect(keys(Pkg3.API.installed()))))
   end
 end
 
