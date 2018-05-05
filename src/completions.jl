@@ -19,12 +19,14 @@ const builtin_completions =
 
 const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}!]*+$"
 
+_names(mod; all = false, imported = false) = filter!(x -> !Base.isdeprecated(mod, Symbol(x)), names(mod, all=all, imported=imported))
+
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 
 filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern, x))
 
 accessible(mod::Module) =
-  [names(mod, all=true, imported=true);
+  [_names(mod, all=true, imported=true);
    map(names, moduleusings(mod))...] |> unique |> filtervalid
 
 Base.getindex(b::Binding) = isdefined(b.mod, b.var) ? getfield(b.mod, b.var) : nothing
@@ -51,7 +53,7 @@ function withmeta(completion::AbstractString, mod::Module)
   c
 end
 
-for name in map(string, names(Base))
+for name in map(string, _names(Base))
   meta_cache[(Base, name)] = withmeta(name, Base)
 end
 
@@ -60,9 +62,9 @@ withmeta(completions::Vector, mod::Module) =
 
 function namecompletions_(mod::Module, qualified = false)
   if !qualified
-    [withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), accessible(mod)), mod); builtin_completions]
+    [withmeta(accessible(mod), mod); builtin_completions]
   else
-    withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), filtervalid(names(mod, all=true))), mod)
+    withmeta(filtervalid(_names(mod, all=true)), mod)
   end
 end
 
