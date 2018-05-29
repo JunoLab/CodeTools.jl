@@ -149,15 +149,17 @@ end
 # –––––––––––––––––––
 # not sure why this errors with "ArgumentError: Module Pkg3 not found in current path."
 
-using Pkg3
+# using Pkg3
+#
+# pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
+#
+# function pkgcompletions(line)
+#   if occursin(r"^using|^import", line)
+#     return pkgmeta(sort!(collect(keys(Pkg3.API.installed()))))
+#   end
+# end
 
-pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
-
-function pkgcompletions(line)
-  if occursin(r"^using|^import", line)
-    return pkgmeta(sort!(collect(keys(Pkg3.API.installed()))))
-  end
-end
+pkgcompletions(line) = return
 
 # Completions
 # –––––––––––
