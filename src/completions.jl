@@ -27,7 +27,7 @@ filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern
 
 accessible(mod::Module) =
   [_names(mod, all=true, imported=true);
-   map(names, moduleusings(mod))...] |> unique |> filtervalid
+   map(_names, moduleusings(mod))...] |> unique |> filtervalid
 
 Base.getindex(b::Binding) = isdefined(b.mod, b.var) ? getfield(b.mod, b.var) : nothing
 
@@ -94,7 +94,7 @@ function pathprefix(line)
 end
 
 function stringmeta(cs, prefix)
-  map(c -> d(:text => c, :_prefix => prefix, :type => :file), cs)
+  map(c -> Dict(:text => c, :_prefix => prefix, :type => :file), cs)
 end
 
 function pathmeta(cs, path, prefix)
@@ -149,17 +149,15 @@ end
 # –––––––––––––––––––
 # not sure why this errors with "ArgumentError: Module Pkg3 not found in current path."
 
-# using Pkg3
-#
-# pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
-#
-# function pkgcompletions(line)
-#   if occursin(r"^using|^import", line)
-#     return pkgmeta(sort!(collect(keys(Pkg3.API.installed()))))
-#   end
-# end
+import Pkg
 
-pkgcompletions(line) = return
+pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
+
+function pkgcompletions(line)
+  if occursin(r"^using|^import", line)
+    return pkgmeta(sort!(collect(keys(Pkg.API.installed()))))
+  end
+end
 
 # Completions
 # –––––––––––

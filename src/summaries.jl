@@ -31,6 +31,8 @@ function hasdoc(b::Binding)
     false
 end
 
+hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
+
 function trygetdoc(b)
   docs = try
     Docs.doc(b)
@@ -38,8 +40,6 @@ function trygetdoc(b)
     ""
   end
 end
-
-hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
 
 function fullsignature(b::Binding)
   hasdoc(b) || return
