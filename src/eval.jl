@@ -30,6 +30,15 @@ function Base.include_string(mod, s::AbstractString, fname::AbstractString, line
   include_string(mod, "\n"^(line-1)*s, fname)
 end
 
+function getmodule(mod::String)
+  inds = filter(x -> x.name==mod, collect(keys(Base.loaded_modules)))
+  if length(inds) == 1
+    return get(Base.loaded_modules, first(inds), Main)
+  else
+    return Main
+  end
+end
+
 # Get the current module for a file/pos
 
 function getmodule(code, pos; filemod = nothing)
