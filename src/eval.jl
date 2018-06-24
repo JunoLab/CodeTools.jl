@@ -44,7 +44,7 @@ function getmod(mod)
   if length(inds) == 1
     return get(Base.loaded_modules, first(inds), Main)
   elseif length(inds) == 0
-    return Main
+    return getmodule("Main.$mod")
   else
     @warn "no support for multiple packages with the same name yet"
     return Main
@@ -55,8 +55,13 @@ function getsubmod(mods)
   mod = getmod(popfirst!(mods))
   for submod in mods
     submod = Symbol(submod)
-    if isdefined(mod, submod)
-      mod = getfield(mod, submod)
+    if isdefined(mod, submod) && !Base.isdeprecated(mod, submod)
+      s = getfield(mod, submod)
+      if s isa Module
+        mod = s
+      else
+        return mod
+      end
     else
       return mod
     end
