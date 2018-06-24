@@ -31,12 +31,37 @@ function Base.include_string(mod, s::AbstractString, fname::AbstractString, line
 end
 
 function getmodule(mod::String)
+  mods = split(mod, '.')
+  if length(mods) == 1
+    getmod(mod)
+  else
+    getsubmod(mods)
+  end
+end
+
+function getmod(mod)
   inds = filter(x -> x.name==mod, collect(keys(Base.loaded_modules)))
   if length(inds) == 1
     return get(Base.loaded_modules, first(inds), Main)
+  elseif length(inds) == 0
+    return Main
   else
+    @warn "no support for multiple packages with the same name yet"
     return Main
   end
+end
+
+function getsubmod(mods)
+  mod = getmod(popfirst!(mods))
+  for submod in mods
+    submod = Symbol(submod)
+    if isdefined(mod, submod)
+      mod = getfield(mod, submod)
+    else
+      return mod
+    end
+  end
+  mod
 end
 
 # Get the current module for a file/pos
