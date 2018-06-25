@@ -175,7 +175,7 @@ const filemodule = memoize(filemodule_)
 
 # Get all modules
 function children(m::Module)
-  return @>> [moduleusings(m); getmodule.(string.(_names(m, all=true, imported=true)))] filter(x->isa(x, Module) && x ≠ m) unique
+  return @>> [moduleusings(m); getmodule.(Ref(m), string.(_names(m, all=true, imported=true)))] filter(x->isa(x, Module) && x ≠ m) unique
 end
 
 function allchildren(m::Module, cs = Set{Module}())

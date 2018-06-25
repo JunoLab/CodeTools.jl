@@ -30,29 +30,34 @@ function Base.include_string(mod, s::AbstractString, fname::AbstractString, line
   include_string(mod, "\n"^(line-1)*s, fname)
 end
 
+function getmodule(parent::Union{Nothing, Module}, mod::String)
+  getmodule("$parent.$mod")
+end
+
 function getmodule(mod::String)
   mods = split(mod, '.')
   if length(mods) == 1
-    getmod(mod)
+    getpackage(mod)
   else
     getsubmod(mods)
   end
 end
 
-function getmod(mod)
+function getpackage(mod)
   inds = filter(x -> x.name==mod, collect(keys(Base.loaded_modules)))
   if length(inds) == 1
     return get(Base.loaded_modules, first(inds), Main)
   elseif length(inds) == 0
-    return getmodule("Main.$mod")
+    return nothing
   else
     @warn "no support for multiple packages with the same name yet"
-    return Main
+    return get(Base.loaded_modules, first(inds), Main)
   end
 end
 
 function getsubmod(mods)
-  mod = getmod(popfirst!(mods))
+  mod = getpackage(popfirst!(mods))
+  mod == nothing && (return nothing)
   for submod in mods
     submod = Symbol(submod)
     if isdefined(mod, submod) && !Base.isdeprecated(mod, submod)
@@ -60,10 +65,10 @@ function getsubmod(mods)
       if s isa Module
         mod = s
       else
-        return mod
+        return nothing
       end
     else
-      return mod
+      return nothing
     end
   end
   mod
@@ -71,9 +76,9 @@ end
 
 # Get the current module for a file/pos
 
-function getmodule(code, pos; filemod = nothing)
+function getmodule(code::AbstractString, pos; filemod = nothing)
   codem = codemodule(code, pos)
   modstr = (codem != "" && filemod != nothing) ? "$filemod.$codem" :
            codem == "" ? filemod : codem
-  getthing(modstr, Main)
+  getmodule(modstr)
 end
