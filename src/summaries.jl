@@ -67,7 +67,7 @@ function returns(b::Binding)
   r = r" -> (.*)"
   sig = fullsignature(b)
   sig == nothing && return
-  if ismatch(r, sig)
+  if occursin(r, sig)
     ret = match(r, sig).captures[1]
     if length(ret) < 10
       ret
