@@ -140,6 +140,7 @@ function pathcompletions(line)
     elseif func == "open"
       pathmeta(children(joinpath(pwd(), dir)), dir, path)
     end
+  catch
   end
 end
 
