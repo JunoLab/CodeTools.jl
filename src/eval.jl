@@ -31,7 +31,8 @@ function Base.include_string(mod, s::AbstractString, fname::AbstractString, line
 end
 
 function getmodule(parent::Union{Nothing, Module}, mod::String)
-  getmodule("$parent.$mod")
+  parent ≠ nothing && (mod = string(parent, mod))
+  getmodule(mod)
 end
 
 function getmodule(mod::String)
