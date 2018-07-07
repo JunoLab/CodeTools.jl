@@ -98,7 +98,7 @@ function stringmeta(cs, prefix)
 end
 
 function pathmeta(cs, path, prefix)
-  stringmeta(map(c -> replace(joinpath(path, c), r"^\./", ""), cs), prefix)
+  stringmeta(map(c -> replace(joinpath(path, c), r"^\./" => ""), cs), prefix)
 end
 
 function children(dir, ext = ""; depth = 0, out = String[], prefix = "")
