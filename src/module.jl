@@ -131,7 +131,7 @@ function includeline(file::AbstractString, included_file::AbstractString)
   i = 0
   open(file) do io
     for (index, line) in enumerate(eachline(io))
-      m = match(r"include\(\"([a-zA-Z_\.\\/]*)\"\)", line)
+      m = match(r"^[^#]*\binclude\(\"([a-zA-Z_\.\\/]*)\"\)", line)
       if m != nothing && normpath(joinpath(dirname(file), m.captures[1])) == included_file
         i = index
         break
