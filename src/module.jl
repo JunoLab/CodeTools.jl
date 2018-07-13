@@ -125,6 +125,9 @@ Takes a given Julia source file and another (absolute) path, gives the
 line on which the path is included in the file or 0.
 """
 function includeline(file::AbstractString, included_file::AbstractString)
+  # check for self-includes
+  file == included_file && return 0
+
   i = 0
   open(file) do io
     for (index, line) in enumerate(eachline(io))
