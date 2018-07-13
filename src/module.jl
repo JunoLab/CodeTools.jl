@@ -125,20 +125,32 @@ Takes a given Julia source file and another (absolute) path, gives the
 line on which the path is included in the file or 0.
 """
 function includeline(file::AbstractString, included_file::AbstractString)
-  # check for self-includes
+  # check for erroneous self includes, doesn't detect more complex cycles though
   file == included_file && return 0
 
-  i = 0
-  open(file) do io
-    for (index, line) in enumerate(eachline(io))
-      m = match(r"^[^#]*\binclude\(\"([a-zA-Z_\.\\/]*)\"\)", line)
-      if m != nothing && normpath(joinpath(dirname(file), m.captures[1])) == included_file
-        i = index
-        break
+  line = 0
+  tokens = Tokenize.tokenize(read(file, String))
+
+  t, state = iterate(tokens)
+  while true
+    if Tokens.kind(t) == Tokens.WHITESPACE && (t.val == "\n" || t.val == "\n\r")
+      line += 1
+    elseif Tokens.kind(t) == Tokens.IDENTIFIER && t.val == "include"
+      t, state = iterate(tokens, state)
+      if Tokens.kind(t) == Tokens.LPAREN
+        t, state = iterate(tokens, state)
+        if Tokens.kind(t) == Tokens.STRING
+          if normpath(joinpath(dirname(file), t.val)) == included_file
+            return line
+          end
+        end
       end
+    elseif Tokens.kind(t) == Tokens.ENDMARKER
+      break
     end
+    t, state = iterate(tokens, state)
   end
-  return i
+  return 0
 end
 
 """
