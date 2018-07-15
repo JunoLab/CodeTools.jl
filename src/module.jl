@@ -128,19 +128,19 @@ function includeline(file::AbstractString, included_file::AbstractString)
   # check for erroneous self includes, doesn't detect more complex cycles though
   file == included_file && return 0
 
-  line = 0
+  line = 1
   tokens = Tokenize.tokenize(read(file, String))
 
   t, state = iterate(tokens)
   while true
-    if Tokens.kind(t) == Tokens.WHITESPACE && (t.val == "\n" || t.val == "\n\r")
-      line += 1
+    if Tokens.kind(t) == Tokens.WHITESPACE
+      line += count(x -> x == '\n', t.val)
     elseif Tokens.kind(t) == Tokens.IDENTIFIER && t.val == "include"
       t, state = iterate(tokens, state)
       if Tokens.kind(t) == Tokens.LPAREN
         t, state = iterate(tokens, state)
         if Tokens.kind(t) == Tokens.STRING
-          if normpath(joinpath(dirname(file), t.val)) == included_file
+          if normpath(joinpath(dirname(file), chop(t.val, head=1, tail=1))) == included_file
             return line
           end
         end
