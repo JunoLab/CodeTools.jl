@@ -19,13 +19,15 @@ const builtin_completions =
 
 const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}!]*+$"
 
+_names(mod; all = false, imported = false) = filter!(x -> !Base.isdeprecated(mod, Symbol(x)), names(mod, all=all, imported=imported))
+
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 
-filtervalid(names) = @>> names map(string) filter(x->ismatch(identifier_pattern, x))
+filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern, x))
 
 accessible(mod::Module) =
-  [names(mod, true, true);
-   map(names, moduleusings(mod))...] |> unique |> filtervalid
+  [_names(mod, all=true, imported=true);
+   map(_names, moduleusings(mod))...] |> unique |> filtervalid
 
 Base.getindex(b::Binding) = isdefined(b.mod, b.var) ? getfield(b.mod, b.var) : nothing
 
@@ -37,7 +39,7 @@ completiontype(x) =
 
 const meta_cache = Dict{Any,Any}()
 
-function withmeta(completion::AString, mod::Module)
+function withmeta(completion::AbstractString, mod::Module)
   isdefined(mod, Symbol(completion)) || return completion
   b = Binding(mod, Symbol(completion))
   mod = b.mod
@@ -51,7 +53,7 @@ function withmeta(completion::AString, mod::Module)
   c
 end
 
-for name in map(string, names(Base))
+for name in map(string, _names(Base))
   meta_cache[(Base, name)] = withmeta(name, Base)
 end
 
@@ -60,9 +62,9 @@ withmeta(completions::Vector, mod::Module) =
 
 function namecompletions_(mod::Module, qualified = false)
   if !qualified
-    [withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), accessible(mod)), mod); builtin_completions]
+    [withmeta(accessible(mod), mod); builtin_completions]
   else
-    withmeta(filter!(x->!Base.isdeprecated(mod, Symbol(x)), filtervalid(names(mod, true))), mod)
+    withmeta(filtervalid(_names(mod, all=true)), mod)
   end
 end
 
@@ -92,11 +94,11 @@ function pathprefix(line)
 end
 
 function stringmeta(cs, prefix)
-  map(c -> d(:text => c, :_prefix => prefix, :type => :file), cs)
+  map(c -> Dict(:text => c, :_prefix => prefix, :type => :file), cs)
 end
 
 function pathmeta(cs, path, prefix)
-  stringmeta(map(c -> replace(joinpath(path, c), r"^\./", ""), cs), prefix)
+  stringmeta(map(c -> replace(joinpath(path, c), r"^\./" => ""), cs), prefix)
 end
 
 function children(dir, ext = ""; depth = 0, out = String[], prefix = "")
@@ -140,37 +142,29 @@ function pathcompletions(line)
     elseif func == "open"
       pathmeta(children(joinpath(pwd(), dir)), dir, path)
     end
+  catch e
+    []
   end
 end
 
 # Package Completions
 # –––––––––––––––––––
+# not sure why this errors with "ArgumentError: Module Pkg3 not found in current path."
 
-packages(dir = Pkg.dir()) =
-  @>> dir readdir filter(x->!ismatch(r"^\.|^METADATA$|^REQUIRE$", x))
+import Pkg
 
-all_packages() = packages(Pkg.dir("METADATA"))
+pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
 
-required_packages() =
-  @>> Pkg.dir("REQUIRE") readstring lines
-
-unused_packages() = setdiff(all_packages(), required_packages())
-
-pkgmeta(xs) = map(x -> d(:text=>x, :type=>"package"), xs)
+function stdlibs()
+  srcdir = joinpath(Sys.BINDIR,"..","..","stdlib","v0.7")
+  releasedir = joinpath(Sys.BINDIR,"..","share","julia","stdlib","v0.7")
+  return ispath(srcdir) ? readdir(srcdir) :
+                          ispath(releasedir) ? readdir(releasedir) : []
+end
 
 function pkgcompletions(line)
-  if ismatch(r"^using", line)
-    return pkgmeta(packages())
-  end
-  m = funcprefix(line)
-  m == nothing && return
-  func, _ = m
-  if func in ["Pkg.add", "Pkg.clone", "Pkg.build", "Pkg.test"]
-    pkgmeta(all_packages())
-  elseif func in ["Pkg.pin", "Pkg.checkout"]
-    pkgmeta(packages())
-  elseif func in ["Pkg.rm"]
-    pkgmeta(required_packages())
+  if occursin(r"^using|^import", line)
+    return pkgmeta(sort!(append!(collect(keys(Pkg.API.installed())), stdlibs())))
   end
 end
 
@@ -179,7 +173,7 @@ end
 
 const providers = [pkgcompletions, pathcompletions]
 
-function completions(line::AString, mod::Module = Main; default = true)
+function completions(line::AbstractString, mod::Module = Main; default = true)
   for provider in providers
     cs = provider(line)
     cs ≠ nothing && return cs

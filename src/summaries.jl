@@ -1,5 +1,5 @@
 import Base.Docs: Binding, @var
-import Base.Markdown: MD, Code, Paragraph
+using Markdown: MD, Code, Paragraph, plain
 
 # flat_content(md) = md
 # flat_content(xs::Vector) = reduce((xs, x) -> vcat(xs,flat_content(x)), [], xs)
@@ -31,6 +31,8 @@ function hasdoc(b::Binding)
     false
 end
 
+hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
+
 function trygetdoc(b)
   docs = try
     Docs.doc(b)
@@ -38,8 +40,6 @@ function trygetdoc(b)
     ""
   end
 end
-
-hasdoc(b) = hasdoc(Docs.aliasof(b, typeof(b)))
 
 function fullsignature(b::Binding)
   hasdoc(b) || return
@@ -60,14 +60,14 @@ end
 function signature(b::Binding)
   sig = fullsignature(b)
   sig == nothing && return
-  replace(sig, r" -> .*$", "")
+  replace(sig, r" -> .*$" => "")
 end
 
 function returns(b::Binding)
   r = r" -> (.*)"
   sig = fullsignature(b)
   sig == nothing && return
-  if ismatch(r, sig)
+  if occursin(r, sig)
     ret = match(r, sig).captures[1]
     if length(ret) < 10
       ret
@@ -87,9 +87,9 @@ function description(b::Binding)
     first = md[2]
   end
   if isa(first, Paragraph)
-    desc = Markdown.plain(first)
+    desc = plain(first)
     return length(desc) > 100 ?
-      desc[1:100]*"..." :
+      desc[1:nextind(desc, 0, 99)]*"..." :
       desc
   end
 end
