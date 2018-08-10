@@ -100,7 +100,7 @@ end
 
   @test CodeTools.filemodule(normpath(joinpath(@__DIR__, "..", "src", "module.jl"))) == "CodeTools"
 
-  @test CodeTools.includeline(normpath(joinpath(@__DIR__, "..", "src", "CodeTools.jl")), normpath(joinpath(@__DIR__, "..", "src", "utils.jl"))) == 7
+  @test CodeTools.includeline(normpath(joinpath(@__DIR__, "..", "src", "CodeTools.jl")), normpath(joinpath(@__DIR__, "..", "src", "utils.jl"))) == 5
 end
 
 @testset "completions" begin
