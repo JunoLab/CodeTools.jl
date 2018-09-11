@@ -106,4 +106,5 @@ end
 @testset "completions" begin
   @test CodeTools.prefix("MacroTools.@") == ["MacroTools", "@"]
   @test length(CodeTools.completions("CodeTools.pre")) > 0
+  @test "LinearAlgebra" in CodeTools.stdlibs()
 end

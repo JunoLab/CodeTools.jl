@@ -155,12 +155,15 @@ import Pkg
 
 pkgmeta(xs) = [Dict(:text => x, :type => "package") for x in xs]
 
-function stdlibs()
-  srcdir = joinpath(Sys.BINDIR,"..","..","stdlib","v0.7")
-  releasedir = joinpath(Sys.BINDIR,"..","share","julia","stdlib","v0.7")
+function _stdlibs()
+  ver = string("v", VERSION.major, ".", VERSION.minor)
+  srcdir = joinpath(Sys.BINDIR,"..","..","stdlib",ver)
+  releasedir = joinpath(Sys.BINDIR,"..","share","julia","stdlib",ver)
   return ispath(srcdir) ? readdir(srcdir) :
                           ispath(releasedir) ? readdir(releasedir) : []
 end
+
+const stdlibs = memoize(_stdlibs)
 
 function pkgcompletions(line)
   if occursin(r"^using|^import", line)
