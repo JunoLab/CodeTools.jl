@@ -159,7 +159,12 @@ file is included or nothing.
 """
 function find_include(path::AbstractString)
   for file in @> path dirname dirsnearby jl_files
-    line = includeline(file, path)
+    line = -1
+    try
+      line = includeline(file, path)
+    catch err
+      return nothing
+    end
     line > 0 && (return file, line)
   end
 end
