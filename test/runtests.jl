@@ -79,6 +79,13 @@ end
   bla.module
   foo
   end
+  """,
+  """
+  begin
+  module Foo
+  2+2
+  end
+  1+1
   """
   ]
 
@@ -97,6 +104,9 @@ end
   @test CodeTools.codemodule(code[6], 1) == ""
   @test CodeTools.codemodule(code[6], 2) == ""
   @test CodeTools.codemodule(code[6], 3) == ""
+  @test CodeTools.codemodule(code[7], 1) == ""
+  @test CodeTools.codemodule(code[7], 3) == "Foo"
+  @test CodeTools.codemodule(code[7], 5) == ""
 
   @test CodeTools.filemodule(normpath(joinpath(@__DIR__, "..", "src", "module.jl"))) == "CodeTools"
 

@@ -75,6 +75,7 @@ of the module at that line.
 function codemodule(code, line)
   stack = String[]
   # count all unterminated block openers, brackets, and parens
+  openers = [[0,0,0]]
   n_openers = 0
   n_brackets = 0
   n_parens = 0
@@ -92,29 +93,34 @@ function codemodule(code, line)
     # them also needs to be closed in them. That way, we don't need special
     # handling for comprehensions and `end`-indexing.
     if Tokens.kind(t) == Tokens.LSQUARE
-      n_brackets += 1
-    elseif n_brackets > 0
+      openers[length(stack)+1][2] += 1
+    elseif openers[length(stack)+1][2] > 0
       if Tokens.kind(t) == Tokens.RSQUARE
-        n_brackets -= 1
+        openers[length(stack)+1][2] -= 1
       end
     elseif Tokens.kind(t) == Tokens.LPAREN
-      n_parens += 1
-    elseif n_parens > 0
+      openers[length(stack)+1][3] += 1
+    elseif openers[length(stack)+1][3] > 0
       if Tokens.kind(t) == Tokens.RPAREN
-        n_parens -= 1
+        openers[length(stack)+1][3] -= 1
       end
     elseif Tokens.exactkind(t) in MODULE_STARTERS && (last_token == nothing || Tokens.kind(last_token) == Tokens.WHITESPACE) # new module
       next_modulename = i + 2
     elseif i == next_modulename && Tokens.kind(t) == Tokens.IDENTIFIER && Tokens.kind(last_token) == Tokens.WHITESPACE
       push!(stack, Tokens.untokenize(t))
+      push!(openers, [0,0,0])
     elseif Tokens.exactkind(t) in SCOPE_STARTERS  # new non-module scope
-      n_openers += 1
+      openers[length(stack)+1][1] += 1
     elseif Tokens.exactkind(t) == Tokens.END  # scope ended
-      n_openers == 0 ? (!isempty(stack) && pop!(stack)) : n_openers -= 1
+      if openers[length(stack)+1][1] == 0
+        !isempty(stack) && pop!(stack)
+        length(openers) > 1 && pop!(openers)
+      else
+        openers[length(stack)+1][1] -= 1
+      end
     end
     last_token = t
   end
-
   return join(stack, ".")
 end
 
