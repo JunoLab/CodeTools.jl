@@ -61,7 +61,6 @@ const SCOPE_STARTERS = [Tokens.BEGIN,
                         Tokens.MACRO,
                         Tokens.LET,
                         Tokens.TYPE,
-                        Tokens.IMMUTABLE,
                         Tokens.DO,
                         Tokens.QUOTE,
                         Tokens.STRUCT]
