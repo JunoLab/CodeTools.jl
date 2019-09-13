@@ -17,7 +17,7 @@ const builtin_completions =
 # Module completions
 # ––––––––––––––––––
 
-const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}!]*+$"
+const identifier_pattern = r"^@?[_\p{L}][\p{Xwd}′!]*+$"
 
 _names(mod; all = false, imported = false) = filter!(x -> !Base.isdeprecated(mod, Symbol(x)), names(mod, all=all, imported=imported))
 
