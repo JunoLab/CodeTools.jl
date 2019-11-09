@@ -51,7 +51,7 @@ function getpackage(mod)
   elseif length(inds) == 0
     return nothing
   else
-    @warn "no support for multiple packages with the same name yet"
+    @warn "no support for multiple packages with the same name yet (conflicting packages: $mod)"
     return get(Base.loaded_modules, first(inds), Main)
   end
 end
