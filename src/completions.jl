@@ -23,7 +23,7 @@ _names(mod; all = false, imported = false) = filter!(x -> !Base.isdeprecated(mod
 
 moduleusings(mod) = ccall(:jl_module_usings, Any, (Any,), mod)
 
-filtervalid(names) = @>> names map(string) filter(x->occursin(identifier_pattern, x))
+filtervalid(names) = @>> names map(string) filter(Base.isidentifier)
 
 accessible(mod::Module) =
   [_names(mod, all=true, imported=true);
