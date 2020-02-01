@@ -2,7 +2,7 @@ lines(s) = split(s, "\n")
 
 function memoize(f)
   mem = d()
-  (args...) -> Base.@get!(mem, args, f(args...))
+  (args...) -> get!(()->f(args...), mem, args)
 end
 
 function memoize_debounce(f, expiry = 1)
