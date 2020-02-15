@@ -1,6 +1,6 @@
 name = "CodeTools"
 uuid = "53a63b46-67e4-5edd-8c66-0af0544a99b9"
-version = "0.6.6"
+version = "0.7.0"
 
 [deps]
 LNR = "7c4cb9fa-83a0-5386-9231-d6167c818060"
