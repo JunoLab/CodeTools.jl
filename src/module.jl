@@ -35,7 +35,7 @@ end
 """
 Takes a start directory and returns a set of nearby directories.
 """
-function dirsnearby(dir; descend = 1, ascend = 1, set = Set{String}())
+function dirsnearby(dir; descend = 1, ascend = 5, set = Set{String}())
   push!(set, dir)
   if descend > 0
     for down in dirs(dir)
@@ -45,7 +45,8 @@ function dirsnearby(dir; descend = 1, ascend = 1, set = Set{String}())
       end
     end
   end
-  ascend > 0 && dirsnearby(dirname(dir), descend = descend, ascend = ascend-1, set = set)
+  ascend > 0 && dirname(dir) !== dir && dirsnearby(dirname(dir), descend = descend, ascend = ascend-1, set = set)
+
   return set
 end
 
